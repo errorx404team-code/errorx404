@@ -1,0 +1,410 @@
+================================================================================
+  ErrorX404 — AI-Powered Legacy Code Modernization Platform
+  Complete Project Overview
+================================================================================
+
+PROJECT NAME : ErrorX404 (also referred to as "VistA Modernizer" in startup scripts)
+PACKAGE NAME : legacy-code-modernization-platform
+VERSION      : 1.0.0
+REPOSITORY   : errorx404-main
+
+--------------------------------------------------------------------------------
+WHAT IS THIS PROJECT?
+--------------------------------------------------------------------------------
+ErrorX404 is a full-stack web application that automates the modernization of
+legacy MUMPS (Massachusetts General Hospital Utility Multi-Programming System)
+code — the programming language used in the VA VistA Electronic Health Record
+(EHR) system — into modern Python (or R) code.
+
+The platform is built as a VS Code-style dark IDE in the browser. It runs an
+AI-powered pipeline powered by Google Gemini LLM that:
+  1. Parses and understands legacy MUMPS routines
+  2. Extracts business logic and specifications
+  3. Converts the code to Python/R
+  4. Verifies the output through test execution in a sandbox
+  5. Scores confidence & detects hallucinations
+  6. Provides human review (approve/reject/rollback)
+  7. Auto-generates documentation and explainability traces
+  8. Provides an AI chatbot assistant for Q&A about converted code
+
+--------------------------------------------------------------------------------
+TECH STACK
+--------------------------------------------------------------------------------
+FRONTEND:
+  - React 18 (JSX)
+  - Vite 5 (build & dev server)
+  - Tailwind CSS 3 (GitHub dark theme color palette)
+  - Monaco Editor (@monaco-editor/react) — same editor used in VS Code
+  - Recharts — charts for the dashboard
+  - Lucide React — icon library
+
+BACKEND:
+  - Python (Python 3.14 supported)
+  - FastAPI — REST API framework
+  - Uvicorn — ASGI server
+  - SQLAlchemy 2 — ORM
+  - SQLite — embedded database (file: backend/modernization.db)
+  - Pydantic 2 — data validation / schemas
+  - Google Gemini API (gemini-2.0-flash, gemini-1.5-flash, etc.) — LLM
+  - python-dotenv — environment variable management
+  - requests — HTTP calls to Gemini API
+  - pytest — test framework
+
+--------------------------------------------------------------------------------
+PROJECT STRUCTURE
+--------------------------------------------------------------------------------
+errorx404-main/
+│
+├── index.html                   # Vite HTML entry point
+├── package.json                 # Node.js project manifest (frontend)
+├── vite.config.js               # Vite configuration (proxies /api to :8000)
+├── tailwind.config.js           # Tailwind custom dark theme tokens
+├── postcss.config.js            # PostCSS config for Tailwind
+├── .env.example                 # Environment variable template
+├── .env                         # Actual env file (GEMINI_API_KEY, etc.)
+├── start-backend.ps1            # PowerShell script to start FastAPI backend
+├── start-frontend.ps1           # PowerShell script to start Vite frontend
+├── test_gemini.py               # Standalone Gemini API test script
+├── patient_check.m              # Sample MUMPS source file (demo routine)
+│
+├── src/                         # React frontend source
+│   ├── main.jsx                 # React app entry point
+│   ├── App.jsx                  # Root component — orchestrates all state
+│   ├── index.css                # Global CSS (GitHub dark palette variables)
+│   └── components/
+│       ├── ActivityBar.jsx      # Left icon sidebar (Explorer, Dashboard, etc.)
+│       ├── MenuBar.jsx          # Top menu bar (File, Run, Settings)
+│       ├── SidebarFileTree.jsx  # File/routine tree explorer + upload UI
+│       ├── MonacoEditorTab.jsx  # Main editor area (tabs, diff view, pipeline)
+│       ├── BottomPanel.jsx      # Bottom panel (verification, docs, explain)
+│       ├── RightSidebarChat.jsx # Right panel AI chatbot sidebar
+│       ├── DashboardView.jsx    # Analytics dashboard with KPI cards + charts
+│       ├── StatusBar.jsx        # Bottom status bar (model, status, language)
+│       └── Toast.jsx            # Toast notification system
+│
+└── backend/
+    ├── requirements.txt         # Python dependencies
+    └── app/
+        ├── main.py              # FastAPI app — all REST API endpoints
+        ├── models.py            # SQLAlchemy ORM models (DB tables)
+        ├── schemas.py           # Pydantic request/response schemas
+        ├── database.py          # DB engine, session factory, migration helpers
+        ├── seed_data.py         # Seeds demo MUMPS routines into the DB
+        ├── llm_provider.py      # Gemini API wrapper with fallback logic
+        ├── __init__.py
+        │
+        ├── adapters/
+        │   └── mumps_adapter.py # MUMPS parser: tokenizes routines, tags, globals
+        │
+        ├── pipeline/            # Core AI pipeline modules
+        │   ├── analyzer.py      # Module 1: Spec extraction (LLM + parser)
+        │   ├── dependency_builder.py  # Module 1b: Dependency graph builder
+        │   ├── business_partitioner.py # Module 1c: Business logic partitioner
+        │   ├── converter.py     # Module 2: Code conversion (LLM)
+        │   ├── verifier.py      # Module 3: Independent verification layer
+        │   ├── scorer.py        # Module 4: Confidence & hallucination scoring
+        │   ├── doc_generator.py # Module 6: Auto documentation generator
+        │   └── explainability.py # Module 10: Explainability trace generator
+        │
+        └── execution/
+            └── sandbox_runner.py # Sandboxed Python subprocess executor
+
+--------------------------------------------------------------------------------
+DATABASE SCHEMA (SQLite — backend/modernization.db)
+--------------------------------------------------------------------------------
+Table: routines
+  - id, name, source_language, raw_code, relative_path, workspace_id, created_at
+
+Table: specifications
+  - id, routine_id (FK), spec_json, spec_readable_text, business_rules_json, created_at
+
+Table: conversions
+  - id, routine_id (FK), target_language, generated_code, model_used, created_at
+
+Table: test_cases
+  - id, routine_id (FK), input_json, expected_output, source
+
+Table: verification_results
+  - id, conversion_id (FK), test_case_id (FK), actual_output, passed, mismatch_details, created_at
+
+Table: confidence_scores
+  - id, conversion_id (FK), score (0-100 float), category, reasoning_text
+
+Table: review_decisions
+  - id, conversion_id (FK), decision, reviewer_notes, decided_at
+
+Table: dependency_graph
+  - id, routine_id (FK), node_id, node_type, related_node_id, dependency_type
+
+Table: business_logic_partitions
+  - id, routine_id (FK), partition_name, member_functions_json, cohesion_percentage, coupling_percentage
+
+Table: chat_messages
+  - id, session_id, role (user/assistant), message_text, related_routine_id (FK), created_at
+
+--------------------------------------------------------------------------------
+THE AI PIPELINE — STEP BY STEP
+--------------------------------------------------------------------------------
+The pipeline processes one MUMPS routine at a time through these modules:
+
+STEP 1 — CODE UPLOAD
+  User uploads .m files (MUMPS source files) via the UI file picker.
+  Each file is saved as a "routine" record in the DB.
+  Multiple files in one batch share the same workspace_id.
+  API: POST /api/routines/upload  or  POST /api/routines/upload-files
+
+STEP 2 — SPEC ANALYSIS (Module 1: Legacy Code Understanding)
+  The MUMPS adapter (mumps_adapter.py) tokenizes the raw code:
+    - Extracts routine name, tag/function names, parameters
+    - Identifies global variable accesses (e.g. ^DPT, ^PSRX)
+    - Finds external routine calls
+  The SpecAnalyzer then sends this parsed structure + raw code to Gemini LLM
+  and asks it to extract:
+    - Summary of what the routine does
+    - List of functions with purpose
+    - Explicit business rules (e.g. "RULE-1: Patient DFN must exist in ^DPT")
+    - Globals accessed and edge cases
+  Result is stored as spec_json + spec_readable_text + business_rules_json.
+  API: POST /api/routines/{id}/analyze
+
+STEP 3 — DEPENDENCY GRAPH (Module 1b)
+  DependencyBuilder scans the code for function calls, global reads/writes,
+  and external routine references. It builds a node-edge graph.
+  Stored in: dependency_graph table
+  API: POST /api/routines/{id}/dependency-graph
+
+STEP 4 — BUSINESS LOGIC MAP (Module 1c — Mono2Micro inspired)
+  BusinessPartitioner groups related functions into logical "partitions"
+  (e.g. "Patient Identification", "Prescription Validation") with
+  cohesion % and coupling % metrics.
+  Stored in: business_logic_partitions table
+  API: POST /api/routines/{id}/business-logic-map
+
+STEP 5 — CODE CONVERSION (Module 2: AI-Powered Code Transformation)
+  CodeConverter sends the spec_json + business_rules_json to Gemini with a
+  strict instruction to generate clean Python (or R) code where every
+  business rule is preserved and annotated with a docstring comment.
+  Output: executable Python class/functions with proper error handling.
+  Stored in: conversions table (model_used = "gemini-2.0-flash")
+  API: POST /api/routines/{id}/convert
+
+STEP 6 — VERIFICATION (Module 3: Independent Verification Layer)
+  The generated code is executed in an isolated subprocess sandbox
+  (sandbox_runner.py) against auto-generated test cases.
+  Test cases are LLM-generated from the MUMPS code (3 per routine).
+  Fallback test cases target verify_patient(), calculate_dosage() functions.
+  Results: actual vs. expected output comparison with fuzzy matching.
+  Stored in: test_cases + verification_results tables
+  API: POST /api/conversions/{id}/verify
+
+STEP 7 — CONFIDENCE SCORING (Module 4: Confidence & Hallucination Score)
+  ConfidenceScorer computes a 0–100 score using:
+    score = (pass_rate × 0.6) + (complexity_score × 0.2) + (mismatch_severity × 0.2)
+  Categories:
+    ≥ 85%  →  "safe"         (green — auto-approvable)
+    50–84% →  "needs_review" (yellow — human review required)
+    < 50%  →  "failed"       (red — reject / re-run)
+  Stored in: confidence_scores table
+  API: GET /api/conversions/{id}/score
+
+STEP 8 — HUMAN REVIEW (Module 5: Human-in-the-Loop)
+  Reviewer can approve / reject / request changes / rollback a conversion.
+  Rollback resets the conversion decision to "reverted".
+  Stored in: review_decisions table
+  API: POST /api/conversions/{id}/review
+       POST /api/conversions/{id}/rollback
+
+STEP 9 — DOCUMENTATION (Module 6: Auto-Documentation Generator)
+  LLM generates Markdown documentation for the converted routine covering:
+  - Routine purpose, inputs/outputs, preserved business rules, usage examples.
+  API: GET /api/conversions/{id}/docs
+
+STEP 10 — EXPLAINABILITY (Module 10: Explainability Panel)
+  LLM generates a step-by-step reasoning trace showing why each conversion
+  decision was made and how business rules were preserved.
+  API: GET /api/conversions/{id}/explain
+
+PROJECT-LEVEL PIPELINE:
+  Multiple routines can be processed in one batch.
+  API: POST /api/projects/run-pipeline
+  Export as ZIP preserving folder structure:
+  API: POST /api/projects/export-zip
+
+--------------------------------------------------------------------------------
+AI / LLM INTEGRATION
+--------------------------------------------------------------------------------
+The LLMProvider (llm_provider.py) wraps Google Gemini API with:
+  - Candidate model rotation: tries gemini-flash-latest, gemini-2.0-flash-lite,
+    gemini-1.5-flash, gemini-2.0-flash, gemini-2.0-flash-exp in order
+  - Configurable via GEMINI_API_KEY in the .env file or via the UI Settings modal
+  - API key can be saved from the UI (persisted to .env file)
+  - Smart fallback mode when no API key is provided:
+    Returns hardcoded realistic Python code and spec JSON so the app remains
+    functional for demos without requiring a live API key.
+  - Temperature: 0.2 (deterministic/precise output)
+  - Max tokens: 4096
+
+--------------------------------------------------------------------------------
+FRONTEND UI LAYOUT (VS Code-style Dark IDE)
+--------------------------------------------------------------------------------
+┌─────────────────────────────────────────────────────────────────────┐
+│  MenuBar  (File | Run Pipeline | Settings | Export ZIP)              │
+├────┬────────────────────────────────────────────────────┬───────────┤
+│    │                                                    │           │
+│ A  │  Main Editor Area (MonacoEditorTab)               │  AI Chat  │
+│ c  │  - Source tab: raw MUMPS code (read-only)         │  Sidebar  │
+│ t  │  - Converted tab: generated Python/R code         │           │
+│ i  │  - Diff View tab: side-by-side comparison         │  (Right-  │
+│ v  │  - Pipeline side panel: step progress, spec,      │   Side    │
+│ i  │    dependency graph, business partitions,         │   Chat)   │
+│ t  │    review controls                                │           │
+│ y  │                                                    │           │
+│    ├────────────────────────────────────────────────────┤           │
+│ B  │  Bottom Panel                                      │           │
+│ a  │  - Verification Results tab (pass/fail tests)     │           │
+│ r  │  - Documentation tab (Markdown)                   │           │
+│    │  - Explainability tab (reasoning trace)           │           │
+└────┴────────────────────────────────────────────────────┴───────────┘
+│  StatusBar  (active model, language, pipeline status, workspace)     │
+└─────────────────────────────────────────────────────────────────────┘
+
+Activity Bar (left icon strip) panels:
+  - Explorer:  SidebarFileTree — routine list by workspace, upload .m files
+  - Dashboard: DashboardView — KPI cards + bar/pie charts for migration stats
+
+--------------------------------------------------------------------------------
+HOW TO RUN THE PROJECT
+--------------------------------------------------------------------------------
+PREREQUISITES:
+  - Node.js (for frontend, npm)
+  - Python 3.8+ (3.14 recommended, as per start-backend.ps1)
+  - A Google Gemini API key (optional — fallback mode works without it)
+
+STEP 1: Set up environment variables
+  Copy .env.example to .env and add your Gemini API key:
+    GEMINI_API_KEY=your_actual_gemini_api_key_here
+    PORT=8000
+    DATABASE_URL=sqlite:///./modernization.db
+
+STEP 2: Install backend dependencies
+  cd backend
+  pip install -r requirements.txt
+
+STEP 3: Start the backend server
+  Run: .\start-backend.ps1
+  OR manually:  cd backend && python -m uvicorn app.main:app --reload --port 8000
+  Backend runs at: http://localhost:8000
+  API docs at:    http://localhost:8000/docs  (Swagger UI, auto-generated)
+
+STEP 4: Install frontend dependencies
+  npm install
+
+STEP 5: Start the frontend dev server
+  Run: .\start-frontend.ps1
+  OR manually: npm run dev
+  Frontend runs at: http://localhost:3000
+  (Vite proxies /api/* requests to http://localhost:8000)
+
+STEP 6: Open the application
+  Open a browser at http://localhost:3000
+
+--------------------------------------------------------------------------------
+CONFIGURING THE GEMINI API KEY VIA UI
+--------------------------------------------------------------------------------
+You can also set the API key directly inside the running app:
+  1. Click the Settings gear icon in the MenuBar
+  2. Enter your Gemini API key in the modal
+  3. Click "Test Key" to verify connectivity
+  4. Click "Save Key" to persist it to the .env file
+
+--------------------------------------------------------------------------------
+SUPPORTED SOURCE / TARGET LANGUAGES
+--------------------------------------------------------------------------------
+Source Languages:
+  - MUMPS (fully supported — active parser + LLM spec engine)
+  - COBOL (stubbed interface — adapter exists but not yet fully implemented)
+  API: GET /api/adapters
+
+Target Languages:
+  - Python (default)
+  - R (supported via LLM)
+
+--------------------------------------------------------------------------------
+KEY API ENDPOINTS (all prefixed with /api)
+--------------------------------------------------------------------------------
+GET    /                                   Health check
+GET    /api/adapters                       List supported source languages
+GET    /api/routines                       List all routines
+POST   /api/routines/upload                Upload a single routine
+POST   /api/routines/upload-files          Batch upload routines
+GET    /api/routines/{id}                  Get a routine by ID
+POST   /api/routines/{id}/analyze          Run spec extraction (Module 1)
+POST   /api/routines/{id}/dependency-graph Build dependency graph (Module 1b)
+POST   /api/routines/{id}/business-logic-map Build business logic map (Module 1c)
+POST   /api/routines/{id}/convert          Convert code (Module 2)
+POST   /api/conversions/{id}/verify        Run verification (Module 3)
+GET    /api/conversions/{id}/score         Get confidence score (Module 4)
+POST   /api/conversions/{id}/review        Submit human review (Module 5)
+POST   /api/conversions/{id}/rollback      Rollback conversion (Module 8)
+GET    /api/conversions/{id}/docs          Get documentation (Module 6)
+GET    /api/conversions/{id}/explain       Get explainability trace (Module 10)
+GET    /api/dashboard/summary             Dashboard KPI stats (Module 7)
+POST   /api/chat/ask                       AI chatbot Q&A (Module 11)
+POST   /api/projects/run-pipeline          Batch project pipeline
+POST   /api/projects/export-zip           Export project as ZIP
+POST   /api/settings/test-api-key          Test Gemini API key
+POST   /api/settings/api-key              Save Gemini API key
+GET    /api/settings/api-key-status       Check if API key is configured
+
+--------------------------------------------------------------------------------
+WORKSPACE CONCEPT
+--------------------------------------------------------------------------------
+When multiple .m files are uploaded at once (e.g. a folder), they share
+a common UUID workspace_id. The UI groups routines into "workspaces"
+represented as tabs in the file explorer. Each workspace is isolated —
+you can work on multiple MUMPS projects simultaneously.
+
+--------------------------------------------------------------------------------
+DEMO DATA
+--------------------------------------------------------------------------------
+On first startup, seed_data.py automatically inserts 3 sample MUMPS routines
+into the database so the app is immediately usable without uploading files:
+  1. A patient verification routine
+  2. A medication dosage calculation routine
+  3. An order status update routine
+These routines simulate real VistA healthcare EHR logic.
+
+--------------------------------------------------------------------------------
+PIPELINE CONFIDENCE SCORING FORMULA
+--------------------------------------------------------------------------------
+score = (test_pass_rate × 0.6) + (complexity_score × 0.2) + (mismatch_score × 0.2)
+
+complexity_score:
+  < 100 lines  →  95.0
+  < 300 lines  →  85.0
+  ≥ 300 lines  →  70.0
+
+mismatch_severity_score:
+  0 failures   →  100.0
+  1 failure    →  75.0
+  2+ failures  →  40.0
+
+Confidence categories:
+  score ≥ 85  →  safe         (auto-approve eligible)
+  score 50–84 →  needs_review (human approval required)
+  score < 50  →  failed       (re-run or reject)
+
+--------------------------------------------------------------------------------
+NOTES & LIMITATIONS
+--------------------------------------------------------------------------------
+- The sandbox execution is subprocess-based; complex MUMPS patterns not
+  covered by the hardcoded fallback spec will still require a live Gemini key.
+- The COBOL adapter is a stub and does not yet fully parse COBOL source.
+- SQLite is used for simplicity; for production, switch DATABASE_URL to
+  PostgreSQL or another production-grade RDBMS.
+- The app runs fully in fallback/demo mode without a Gemini API key,
+  but live LLM-powered conversion quality requires a valid key.
+
+================================================================================
+END OF PROJECT OVERVIEW
+================================================================================
