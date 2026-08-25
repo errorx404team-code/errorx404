@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """
 Extended scorer.py — dependency-aware confidence scoring.
 Existing calculate_score() API remains unchanged.
@@ -5,16 +6,29 @@ New calculate_project_score() adds cross-file dependency penalties.
 """
 from typing import Dict, Any, List
 
+=======
+from typing import Dict, Any
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
 class ConfidenceScorer:
     def calculate_score(self, verification_summary: Dict[str, Any], generated_code: str) -> Dict[str, Any]:
         """
+<<<<<<< HEAD
         Module 4: Confidence & Hallucination Scoring (backward compatible)
         Formula: score = (test_pass_rate * 0.6) + (complexity_score * 0.2) + (mismatch_severity_score * 0.2)
         Category: >=85 safe, 50-84 needs_review, <50 failed
         """
         pass_rate = verification_summary.get("pass_rate", 0.0)
 
+=======
+        Module 4: Confidence & Hallucination Scoring
+        Formula: score = (test_pass_rate * 0.6) + (complexity_score * 0.2) + (mismatch_severity_score * 0.2)
+        Category: >=85 safe, 50-84 needs_review, <50 failed
+        """
+        pass_rate = verification_summary.get("pass_rate", 0.0) # 0 to 100
+        
+        # Complexity penalty calculation based on code length & line depth
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         lines = generated_code.splitlines()
         line_count = len(lines)
         if line_count < 100:
@@ -24,6 +38,10 @@ class ConfidenceScorer:
         else:
             complexity_score = 70.0
 
+<<<<<<< HEAD
+=======
+        # Mismatch severity score
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         failed_count = verification_summary.get("failed_tests", 0)
         if failed_count == 0:
             mismatch_severity_score = 100.0
@@ -47,6 +65,7 @@ class ConfidenceScorer:
         return {
             "score": score,
             "category": category,
+<<<<<<< HEAD
             "reasoning_text": reasoning,
             "dependency_preservation_pct": 100.0,
             "interface_compatibility_pct": 100.0,
@@ -150,4 +169,9 @@ class ConfidenceScorer:
         }
 
 
+=======
+            "reasoning_text": reasoning
+        }
+
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 scorer = ConfidenceScorer()

@@ -8,6 +8,7 @@ import BottomPanel from './components/BottomPanel';
 import DashboardView from './components/DashboardView';
 import StatusBar from './components/StatusBar';
 import Toast from './components/Toast';
+<<<<<<< HEAD
 import DepReviewModal from './components/DepReviewModal';
 import StartupLandingPage from './components/StartupLandingPage';
 
@@ -16,11 +17,18 @@ export default function App() {
   const [routines, setRoutines] = useState([]);
   const [activeRoutine, setActiveRoutine] = useState(null);
   const [openRoutineIds, setOpenRoutineIds] = useState([]);
+=======
+
+export default function App() {
+  const [routines, setRoutines] = useState([]);
+  const [activeRoutine, setActiveRoutine] = useState(null);
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
   const [targetLang, setTargetLang] = useState('Python');
   const [activeTab, setActiveTab] = useState('explorer');
   const [activeBottomTab, setActiveBottomTab] = useState('verification');
   const [isChatOpen, setIsChatOpen] = useState(true);
 
+<<<<<<< HEAD
   const [uploadedFiles, setUploadedFiles] = useState([]);      // [{ file, rel }]
   const [uploadQueueTotal, setUploadQueueTotal] = useState(0); // total files in last batch
   const [uploadQueueIndex, setUploadQueueIndex] = useState(0); // how many have been uploaded so far
@@ -34,6 +42,14 @@ export default function App() {
   const [pipelineCache, setPipelineCache] = useState({});
 
   // Pipeline Data States (derived from pipelineCache[activeRoutine?.id] or current run)
+=======
+  // Multi-file upload tracking — preserves folder structure for sidebar tree
+  const [uploadedFiles, setUploadedFiles] = useState([]);      // [{ file, rel }]
+  const [uploadQueueTotal, setUploadQueueTotal] = useState(0); // total files in last batch
+  const [uploadQueueIndex, setUploadQueueIndex] = useState(0); // how many have been uploaded so far
+
+  // Pipeline Data States
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
   const [spec, setSpec] = useState(null);
   const [conversion, setConversion] = useState(null);
   const [verificationData, setVerificationData] = useState(null);
@@ -52,6 +68,7 @@ export default function App() {
   const [reviewCounts, setReviewCounts] = useState({ approved: 0, pending: 1, rejected: 0 });
   const [showBottomPanel, setShowBottomPanel] = useState(true);
 
+<<<<<<< HEAD
   // Review loading states — prevents duplicate requests and shows spinner in buttons
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
@@ -90,6 +107,9 @@ export default function App() {
   const batchAnalysisCache = useRef({}); // { [routineId]: { spec, depData, partData } }
 
   // Ref forwarded to SidebarFileTree so MenuBar and WelcomeScreen can trigger upload modal
+=======
+  // Ref forwarded to SidebarFileTree so MenuBar can trigger upload modal
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
   const sidebarUploadRef = useRef(null);
 
   // API Key Settings Modal State
@@ -106,6 +126,7 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         setRoutines(data);
+<<<<<<< HEAD
 
         // Derive workspaces from the routines' workspace_id values
         const wsMap = new Map();
@@ -136,10 +157,16 @@ export default function App() {
           }
         }
         return data;
+=======
+        if (data.length > 0 && !activeRoutine) {
+          setActiveRoutine(data[0]);
+        }
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
       }
     } catch (e) {
       console.error('Failed to fetch routines', e);
     }
+<<<<<<< HEAD
     return [];
   };
 
@@ -149,6 +176,10 @@ export default function App() {
     : routines;
 
 
+=======
+  };
+
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
   const fetchApiKeyStatus = async () => {
     try {
       const res = await fetch('/api/settings/api-key-status');
@@ -166,6 +197,7 @@ export default function App() {
     fetchApiKeyStatus();
   }, []);
 
+<<<<<<< HEAD
   // Sync active pipeline states whenever activeRoutine changes
   useEffect(() => {
     if (!activeRoutine) {
@@ -545,6 +577,8 @@ export default function App() {
     });
   };
 
+=======
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
   const showToast = (message, type = 'info') => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, message, type }]);
@@ -554,6 +588,7 @@ export default function App() {
     setToasts(prev => prev.filter(t => t.id !== id));
   };
 
+<<<<<<< HEAD
   const handleUploadRoutine = async (name, rawCode, sourceLang = 'MUMPS', relativePath = null, workspaceId = null) => {
     setIsUploading(true);
     setUploadQueueTotal(1);
@@ -657,12 +692,45 @@ export default function App() {
     }
   };
 
+=======
+  const handleUploadRoutine = async (name, rawCode, sourceLang = 'MUMPS') => {
+    try {
+      const res = await fetch('/api/routines/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, raw_code: rawCode, source_language: sourceLang })
+      });
+      if (res.ok) {
+        const newRoutine = await res.json();
+        setRoutines(prev => [newRoutine, ...prev]);
+        setActiveRoutine(newRoutine);
+        // Advance queue counter
+        setUploadQueueIndex(prev => prev + 1);
+        // Reset pipeline state for new routine
+        setConversion(null);
+        setVerificationData(null);
+        setConfidenceData(null);
+        setExplainabilityData(null);
+        setDependencyData(null);
+        setPartitionData(null);
+        setDocumentationData(null);
+        setReviewDecision(null);
+        showToast(`✓ ${name}.m uploaded — ready to run pipeline`, 'success');
+      }
+    } catch (e) {
+      showToast('Upload failed. Check backend connection.', 'error');
+    }
+  };
+
+  // Called by SidebarFileTree when a new batch of files starts uploading
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
   const handleSetUploadedFiles = (files) => {
     setUploadedFiles(files);
     setUploadQueueTotal(files.length);
     setUploadQueueIndex(0);
   };
 
+<<<<<<< HEAD
   const handleExportProject = async () => {
     if (workspaceRoutines.length === 0) {
       showToast('No routines to export.', 'info');
@@ -1139,12 +1207,80 @@ export default function App() {
     try { /* no-op */ }
     catch (e) { console.error('Pipeline error', e); }
     finally {
+=======
+  const PIPELINE_STEPS = [
+    { label: 'Analyzing Legacy Code', pct: 14 },
+    { label: 'Building Dependency Graph', pct: 28 },
+    { label: 'Partitioning Business Logic', pct: 42 },
+    { label: `Transforming to ${targetLang}`, pct: 58 },
+    { label: 'Running Verification Suite', pct: 72 },
+    { label: 'Computing Confidence Score', pct: 84 },
+    { label: 'Generating Documentation', pct: 95 },
+    { label: 'Complete', pct: 100 },
+  ];
+
+  const handleRunPipeline = async () => {
+    if (!activeRoutine) return;
+    setIsProcessing(true);
+    setPipelineProgress(0);
+    showToast(`Pipeline started for ${activeRoutine.name}.m`, 'info');
+
+    try {
+      setPipelineStep(PIPELINE_STEPS[0].label); setPipelineProgress(PIPELINE_STEPS[0].pct);
+      const specRes = await fetch(`/api/routines/${activeRoutine.id}/analyze`, { method: 'POST' });
+      if (specRes.ok) setSpec(await specRes.json());
+
+      setPipelineStep(PIPELINE_STEPS[1].label); setPipelineProgress(PIPELINE_STEPS[1].pct);
+      const depRes = await fetch(`/api/routines/${activeRoutine.id}/dependency-graph`, { method: 'POST' });
+      if (depRes.ok) setDependencyData(await depRes.json());
+
+      setPipelineStep(PIPELINE_STEPS[2].label); setPipelineProgress(PIPELINE_STEPS[2].pct);
+      const partRes = await fetch(`/api/routines/${activeRoutine.id}/business-logic-map`, { method: 'POST' });
+      if (partRes.ok) setPartitionData(await partRes.json());
+
+      setPipelineStep(PIPELINE_STEPS[3].label); setPipelineProgress(PIPELINE_STEPS[3].pct);
+      const convRes = await fetch(`/api/routines/${activeRoutine.id}/convert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target_language: targetLang })
+      });
+      let convData = null;
+      if (convRes.ok) {
+        convData = await convRes.json();
+        setConversion(convData);
+      }
+
+      if (convData) {
+        setPipelineStep(PIPELINE_STEPS[4].label); setPipelineProgress(PIPELINE_STEPS[4].pct);
+        const verRes = await fetch(`/api/conversions/${convData.id}/verify`, { method: 'POST' });
+        if (verRes.ok) setVerificationData(await verRes.json());
+
+        setPipelineStep(PIPELINE_STEPS[5].label); setPipelineProgress(PIPELINE_STEPS[5].pct);
+        const scoreRes = await fetch(`/api/conversions/${convData.id}/score`);
+        if (scoreRes.ok) setConfidenceData(await scoreRes.json());
+
+        setPipelineStep(PIPELINE_STEPS[6].label); setPipelineProgress(PIPELINE_STEPS[6].pct);
+        const docsRes = await fetch(`/api/conversions/${convData.id}/docs`);
+        if (docsRes.ok) setDocumentationData(await docsRes.json());
+
+        const expRes = await fetch(`/api/conversions/${convData.id}/explain`);
+        if (expRes.ok) setExplainabilityData(await expRes.json());
+      }
+
+      setPipelineStep(PIPELINE_STEPS[7].label); setPipelineProgress(100);
+      showToast(`✓ Pipeline complete for ${activeRoutine.name}.m — ${targetLang} code ready`, 'success');
+    } catch (e) {
+      console.error('Pipeline error', e);
+      showToast('Pipeline completed with fallback rules.', 'info');
+    } finally {
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
       setIsProcessing(false);
       setPipelineStep('');
       setPipelineProgress(0);
     }
   };
 
+<<<<<<< HEAD
   // ── Accept: approve + download ZIP ────────────────────────────────────────
   const handleApprove = async () => {
     if (!conversion || isApproving || isRejecting) return;
@@ -1255,6 +1391,31 @@ export default function App() {
       showToast('Rejection failed. Please try again.', 'error');
     } finally {
       setIsRejecting(false);
+=======
+  const handleReviewDecision = async (decision) => {
+    if (!conversion) { showToast('Run pipeline first before reviewing.', 'info'); return; }
+    try {
+      const res = await fetch(`/api/conversions/${conversion.id}/review`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision, reviewer_notes: `Marked ${decision} via IDE` })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setReviewDecision(data);
+        showToast(
+          decision === 'approved' ? '✓ Conversion approved and marked safe' : '✗ Conversion rejected — needs revision',
+          decision === 'approved' ? 'success' : 'error'
+        );
+        setReviewCounts(prev => ({
+          ...prev,
+          approved: decision === 'approved' ? prev.approved + 1 : prev.approved,
+          rejected: decision === 'rejected' ? prev.rejected + 1 : prev.rejected
+        }));
+      }
+    } catch (e) {
+      showToast('Review saved locally.', 'info');
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     }
   };
 
@@ -1263,12 +1424,16 @@ export default function App() {
     try {
       const res = await fetch(`/api/conversions/${conversion.id}/rollback`, { method: 'POST' });
       if (res.ok) {
+<<<<<<< HEAD
         const data = await res.json();
         setReviewDecision(data);
         setPipelineCache(prev => ({
           ...prev,
           [activeRoutine.id]: { ...prev[activeRoutine.id], reviewDecision: data }
         }));
+=======
+        setReviewDecision(await res.json());
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         showToast(`↩ Rolled back to original ${activeRoutine.name}.m`, 'error');
       }
     } catch (e) {
@@ -1326,9 +1491,12 @@ export default function App() {
       case 'upload-folder':
         sidebarUploadRef.current?.openUpload(action === 'upload-folder' ? 'folder' : 'file');
         break;
+<<<<<<< HEAD
       case 'export-project':
         handleExportProject();
         break;
+=======
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
       case 'export':
         if (conversion?.generated_code) {
           const blob = new Blob([conversion.generated_code], { type: 'text/plain' });
@@ -1343,7 +1511,12 @@ export default function App() {
         }
         break;
       case 'close':
+<<<<<<< HEAD
         if (activeRoutine) handleCloseTab(activeRoutine.id);
+=======
+        setActiveRoutine(null);
+        setConversion(null);
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         break;
       case 'copy-source':
         if (activeRoutine?.raw_code) navigator.clipboard.writeText(activeRoutine.raw_code);
@@ -1365,6 +1538,7 @@ export default function App() {
         setActiveTab('partition');
         setActiveBottomTab('partitioning');
         break;
+<<<<<<< HEAD
       case 'view-human':
         setActiveBottomTab('human-understanding');
         setShowBottomPanel(true);
@@ -1373,6 +1547,8 @@ export default function App() {
         setActiveBottomTab('dependency');
         setShowBottomPanel(true);
         break;
+=======
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
       case 'toggle-bottom':
         setShowBottomPanel(p => !p);
         break;
@@ -1380,6 +1556,7 @@ export default function App() {
         setIsChatOpen(p => !p);
         break;
       case 'next-routine': {
+<<<<<<< HEAD
         const idx = workspaceRoutines.findIndex(r => r.id === activeRoutine?.id);
         if (idx !== -1 && idx < workspaceRoutines.length - 1) handleSelectRoutine(workspaceRoutines[idx + 1]);
         break;
@@ -1387,6 +1564,21 @@ export default function App() {
       case 'prev-routine': {
         const idx = workspaceRoutines.findIndex(r => r.id === activeRoutine?.id);
         if (idx !== -1 && idx > 0) handleSelectRoutine(workspaceRoutines[idx - 1]);
+=======
+        const idx = routines.findIndex(r => r.id === activeRoutine?.id);
+        if (idx < routines.length - 1) {
+          setActiveRoutine(routines[idx + 1]);
+          setConversion(null); setVerificationData(null); setConfidenceData(null);
+        }
+        break;
+      }
+      case 'prev-routine': {
+        const idx = routines.findIndex(r => r.id === activeRoutine?.id);
+        if (idx > 0) {
+          setActiveRoutine(routines[idx - 1]);
+          setConversion(null); setVerificationData(null); setConfidenceData(null);
+        }
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         break;
       }
       default:
@@ -1394,6 +1586,7 @@ export default function App() {
     }
   };
 
+<<<<<<< HEAD
   const openRoutines = workspaceRoutines.filter(r => openRoutineIds.includes(r.id));
 
   return (
@@ -1412,6 +1605,14 @@ export default function App() {
       />
 
       {/* Main VS Code Layout */}
+=======
+  return (
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-gh-bg font-sans text-gh-text">
+      {/* Menu Bar */}
+      <MenuBar onAction={handleMenuAction} />
+
+      {/* Main Layout */}
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
       <div className="flex-1 flex overflow-hidden min-h-0">
         <ActivityBar
           activeTab={activeTab}
@@ -1424,6 +1625,7 @@ export default function App() {
         />
 
         <SidebarFileTree
+<<<<<<< HEAD
           routines={workspaceRoutines}
           allRoutines={workspaceRoutines}
           activeRoutine={activeRoutine}
@@ -1433,6 +1635,19 @@ export default function App() {
           onRunPipeline={handleRunProjectPipeline}
           isProcessing={isProcessing}
           isUploading={isUploading}
+=======
+          routines={routines}
+          activeRoutine={activeRoutine}
+          onSelectRoutine={(r) => {
+            setActiveRoutine(r);
+            setConversion(null);
+            setVerificationData(null);
+            setConfidenceData(null);
+          }}
+          onUploadRoutine={handleUploadRoutine}
+          onRunPipeline={handleRunPipeline}
+          isProcessing={isProcessing}
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
           targetLang={targetLang}
           setTargetLang={setTargetLang}
           pipelineProgress={pipelineProgress}
@@ -1440,10 +1655,13 @@ export default function App() {
           uploadedFiles={uploadedFiles}
           onSetUploadedFiles={handleSetUploadedFiles}
           uploadRef={sidebarUploadRef}
+<<<<<<< HEAD
           pipelineCache={pipelineCache}
           workspaces={workspaces}
           activeWorkspaceId={activeWorkspaceId}
           onSelectWorkspace={setActiveWorkspaceId}
+=======
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         />
 
         <div className="flex-1 flex flex-col h-full overflow-hidden">
@@ -1452,6 +1670,7 @@ export default function App() {
           ) : (
             <>
               <MonacoEditorTab
+<<<<<<< HEAD
                 openRoutines={openRoutines}
                 activeRoutine={activeRoutine}
                 onSelectRoutine={handleSelectRoutine}
@@ -1462,21 +1681,35 @@ export default function App() {
                 reviewDecision={reviewDecision}
                 onApprove={handleApprove}
                 onReject={handleReject}
+=======
+                activeRoutine={activeRoutine}
+                conversion={conversion}
+                targetLang={targetLang}
+                reviewDecision={reviewDecision}
+                onApprove={() => handleReviewDecision('approved')}
+                onReject={() => handleReviewDecision('rejected')}
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
                 onRollback={handleRollback}
                 isProcessing={isProcessing}
                 pipelineStep={pipelineStep}
                 pipelineProgress={pipelineProgress}
+<<<<<<< HEAD
                 onRunSinglePipeline={handleRunPipeline}
                 isApproving={isApproving}
                 isRejecting={isRejecting}
               />
               {showBottomPanel && (activeRoutine || projectPipelineStatus !== 'idle') && (
+=======
+              />
+              {showBottomPanel && (
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
                 <BottomPanel
                   activeBottomTab={activeBottomTab}
                   setActiveBottomTab={setActiveBottomTab}
                   verificationData={verificationData}
                   confidenceData={confidenceData}
                   explainabilityData={explainabilityData}
+<<<<<<< HEAD
                   dependencyData={(activeTab === 'graph' || !activeRoutine) ? (projectDependencyData.nodes.length > 0 ? projectDependencyData : null) : dependencyData}
                   partitionData={(activeTab === 'partition' || !activeRoutine) ? (projectPartitionData.partitions.length > 0 ? projectPartitionData : null) : partitionData}
                   documentationData={documentationData}
@@ -1525,11 +1758,19 @@ export default function App() {
                   </span>
                 </div>
               )}
+=======
+                  dependencyData={dependencyData}
+                  partitionData={partitionData}
+                  documentationData={documentationData}
+                />
+              )}
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
             </>
           )}
         </div>
       </div>
 
+<<<<<<< HEAD
       {/* ── Dep Review Modal (fullscreen, z-50) ──────────────────────────── */}
       {depReviewOpen && (
         <DepReviewModal
@@ -1553,6 +1794,9 @@ export default function App() {
       )}
 
       {/* Floating AI Copilot Chat */}
+=======
+      {/* Floating AI chat — rendered outside the layout flow so it overlays everything */}
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
       <RightSidebarChat
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
@@ -1565,12 +1809,19 @@ export default function App() {
         activeRoutine={activeRoutine}
         targetLang={targetLang}
         isProcessing={isProcessing}
+<<<<<<< HEAD
         isUploading={isUploading}
+=======
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         pipelineStep={pipelineStep}
         reviewCounts={reviewCounts}
         apiKeyStatus={apiKeyStatus}
         onOpenSettings={() => setShowSettingsModal(true)}
+<<<<<<< HEAD
         totalRoutines={workspaceRoutines.length}
+=======
+        totalRoutines={routines.length}
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         uploadQueueTotal={uploadQueueTotal}
         uploadQueueIndex={uploadQueueIndex}
       />
@@ -1696,10 +1947,13 @@ export default function App() {
           </div>
         </div>
       )}
+<<<<<<< HEAD
 
       {showLandingPage && (
         <StartupLandingPage onGoToWorkspace={() => setShowLandingPage(false)} />
       )}
+=======
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     </div>
   );
 }

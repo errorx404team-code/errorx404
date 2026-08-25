@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+<<<<<<< HEAD
 import logoImg from '../assets/temp_image_1786523047062.jpeg';
 
+=======
+import { Zap } from 'lucide-react';
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
 // ─── Menu definitions ────────────────────────────────────────────────────────
 
@@ -12,8 +16,12 @@ const MENUS = [
       { label: 'Upload File…',       shortcut: 'Ctrl+O',    action: 'upload-file' },
       { label: 'Upload Folder…',     shortcut: 'Ctrl+Shift+O', action: 'upload-folder' },
       { divider: true },
+<<<<<<< HEAD
       { label: 'Export Active File…', shortcut: 'Ctrl+Shift+S', action: 'export' },
       { label: 'Export Project ZIP…', shortcut: 'Ctrl+Shift+Z', action: 'export-project' },
+=======
+      { label: 'Export Python…',     shortcut: 'Ctrl+Shift+S', action: 'export' },
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
       { divider: true },
       { label: 'Close Routine',      shortcut: 'Ctrl+W',    action: 'close' },
     ],
@@ -68,6 +76,7 @@ const MENUS = [
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 export default function MenuBar({
   onAction,
   activeRoutine,
@@ -79,6 +88,9 @@ export default function MenuBar({
   onRunPipeline,
   totalRoutines = 0,
 }) {
+=======
+export default function MenuBar({ onAction }) {
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
   const [openMenu, setOpenMenu] = useState(null);
   const barRef = useRef(null);
 
@@ -106,6 +118,7 @@ export default function MenuBar({
     onAction?.(action);
   };
 
+<<<<<<< HEAD
   const canRun = !isProcessing && totalRoutines > 0;
 
   return (
@@ -225,6 +238,64 @@ export default function MenuBar({
           </button>
         </div>
       </div>
+=======
+  return (
+    <div
+      ref={barRef}
+      className="h-8 bg-gh-canvas border-b border-gh-border flex items-center px-2 gap-1 select-none shrink-0 z-40"
+    >
+      {/* App logo mark */}
+      <div className="flex items-center gap-1.5 px-2 mr-1">
+        <div className="w-5 h-5 rounded bg-gh-accentEmphasis flex items-center justify-center">
+          <Zap size={11} className="text-white" strokeWidth={2.5} />
+        </div>
+        <span className="text-[11px] font-semibold text-gh-textMuted tracking-wide">VistA</span>
+      </div>
+
+      {/* Menu items */}
+      {MENUS.map((menu) => (
+        <div key={menu.id} className="relative">
+          <button
+            onClick={() => setOpenMenu(openMenu === menu.id ? null : menu.id)}
+            onMouseEnter={() => openMenu && openMenu !== menu.id && setOpenMenu(menu.id)}
+            className={`px-2.5 py-1 rounded text-[12px] transition-colors ${
+              openMenu === menu.id
+                ? 'bg-gh-surface text-gh-text'
+                : 'text-gh-textMuted hover:text-gh-text hover:bg-gh-surface/60'
+            }`}
+          >
+            {menu.label}
+          </button>
+
+          {/* Dropdown */}
+          {openMenu === menu.id && (
+            <div className="absolute top-full left-0 mt-0.5 w-56 bg-gh-canvas border border-gh-border rounded-lg shadow-modal py-1 z-50 animate-fadeInScale">
+              {menu.items.map((item, i) =>
+                item.divider ? (
+                  <div key={i} className="my-1 border-t border-gh-border" />
+                ) : (
+                  <button
+                    key={i}
+                    onClick={() => handleItemClick(item.action)}
+                    className="w-full flex items-center justify-between px-3 py-1.5 text-[12px] text-gh-textMuted hover:text-gh-text hover:bg-gh-surface transition-colors text-left"
+                  >
+                    <span>{item.label}</span>
+                    {item.shortcut && (
+                      <span className="text-[10px] text-gh-textSubtle font-mono ml-4 shrink-0">{item.shortcut}</span>
+                    )}
+                  </button>
+                )
+              )}
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* Ellipsis for overflow */}
+      <button className="px-2 py-1 rounded text-[12px] text-gh-textSubtle hover:text-gh-text hover:bg-gh-surface/60 transition-colors">
+        ···
+      </button>
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     </div>
   );
 }

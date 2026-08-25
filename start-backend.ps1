@@ -13,9 +13,13 @@ Set-Location $backendPath
 Write-Host "  Working dir: $backendPath" -ForegroundColor DarkGray
 Write-Host ""
 
+<<<<<<< HEAD
 $pythonExe = "python"
 if (Test-Path "$env:LocalAppData\Programs\Python\Python314\python.exe") {
     $pythonExe = "$env:LocalAppData\Programs\Python\Python314\python.exe"
 }
 
 & $pythonExe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+=======
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab

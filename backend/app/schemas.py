@@ -6,17 +6,23 @@ class RoutineUploadRequest(BaseModel):
     name: str
     raw_code: str
     source_language: str = "MUMPS"
+<<<<<<< HEAD
     relative_path: Optional[str] = None
     workspace_id: Optional[str] = None
+=======
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
 class RoutineResponse(BaseModel):
     id: int
     name: str
     source_language: str
     raw_code: str
+<<<<<<< HEAD
     relative_path: Optional[str] = None
     workspace_id: Optional[str] = None
     file_action: Optional[str] = "CONVERT"
+=======
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     created_at: datetime
 
     class Config:
@@ -68,11 +74,14 @@ class ConversionResponse(BaseModel):
     target_language: str
     generated_code: str
     model_used: str
+<<<<<<< HEAD
     # Tracks the origin of the generated code:
     # REAL_GEMINI — from the live Gemini API
     # DEMO_FALLBACK — no API key configured, demo output
     # FAILED — conversion failed, error message in generated_code
     conversion_source: Optional[str] = "UNKNOWN"
+=======
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     created_at: datetime
 
     class Config:
@@ -109,8 +118,11 @@ class ConfidenceScoreResponse(BaseModel):
     score: float
     category: str
     reasoning_text: str
+<<<<<<< HEAD
     dependency_preservation_pct: Optional[float] = 100.0
     interface_compatibility_pct: Optional[float] = 100.0
+=======
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
     class Config:
         from_attributes = True
@@ -162,6 +174,7 @@ class ChatMessageResponse(BaseModel):
 
     class Config:
         from_attributes = True
+<<<<<<< HEAD
 
 
 # ─── NEW: Workspace / Project-level schemas ───────────────────────────────────
@@ -387,3 +400,5 @@ class ChatUnderstandResponse(BaseModel):
     answer: str
     evidence: List[EvidenceItem] = []
     explanation_level: str = "business"
+=======
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab

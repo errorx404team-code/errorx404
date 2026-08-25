@@ -1,7 +1,11 @@
 import React from 'react';
+<<<<<<< HEAD
 import { CheckCircle2, AlertTriangle, XCircle, ShieldCheck, Network, Layers, FileText, Cpu, Activity, Terminal, GitBranch, ListOrdered, PackageCheck, AlertCircle, BookOpen } from 'lucide-react';
 import HumanUnderstandingPanel from './HumanUnderstandingPanel';
 import DependencyGraphPanel from './DependencyGraphPanel';
+=======
+import { CheckCircle2, AlertTriangle, XCircle, ShieldCheck, Network, Layers, FileText, Cpu, Activity } from 'lucide-react';
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
 export default function BottomPanel({
   activeBottomTab,
@@ -11,6 +15,7 @@ export default function BottomPanel({
   explainabilityData,
   dependencyData,
   partitionData,
+<<<<<<< HEAD
   documentationData,
   projectPipelineLog = [],
   projectPipelineStatus = 'idle',
@@ -28,11 +33,15 @@ export default function BottomPanel({
   isAnalyzing = false,
   onRunAnalysis = null,
   onProceedToConversion = null,
+=======
+  documentationData
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 }) {
   const tabs = [
     { id: 'verification', label: 'Verification', icon: CheckCircle2 },
     { id: 'confidence', label: 'Confidence', icon: ShieldCheck },
     { id: 'explainability', label: 'Explainability', icon: Activity },
+<<<<<<< HEAD
     { id: 'dependency', label: 'Dep Graph', icon: Network },
     { id: 'human-understanding', label: 'Human View', icon: BookOpen },
     { id: 'partitioning', label: 'Logic Map', icon: Layers },
@@ -40,6 +49,11 @@ export default function BottomPanel({
     { id: 'conversion-plan', label: 'Conv Plan', icon: ListOrdered },
     { id: 'project-verify', label: 'Proj Verify', icon: PackageCheck },
     { id: 'pipeline-output', label: 'Pipeline', icon: Terminal },
+=======
+    { id: 'dependency', label: 'Dependency Graph', icon: Network },
+    { id: 'partitioning', label: 'Logic Map', icon: Layers },
+    { id: 'docs', label: 'Docs', icon: FileText },
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
   ];
 
   const Empty = ({ message }) => (
@@ -49,6 +63,7 @@ export default function BottomPanel({
     </div>
   );
 
+<<<<<<< HEAD
   // Human understanding panel needs full height — expand when active
   const isFullHeight = activeBottomTab === 'human-understanding' || activeBottomTab === 'dependency';
 
@@ -63,11 +78,25 @@ export default function BottomPanel({
             // Badge: show cycle warning on conversion-plan tab
             const showBadge = t.id === 'conversion-plan' && workspaceCycles.length > 0;
             const showVerBadge = t.id === 'project-verify' && projectVerification && projectVerification.overall_status === 'FAILED';
+=======
+  return (
+    <div className="h-56 bg-gh-canvas border-t border-gh-border flex flex-col shrink-0 select-none">
+      {/* Tab Header */}
+      <div className="bg-gh-surface2 border-b border-gh-border flex justify-between items-center px-2 h-8 shrink-0">
+        <div className="flex items-center">
+          {tabs.map((t) => {
+            const isActive = activeBottomTab === t.id;
+            const Icon = t.icon;
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
             return (
               <button
                 key={t.id}
                 onClick={() => setActiveBottomTab(t.id)}
+<<<<<<< HEAD
                 className={`relative flex items-center gap-1.5 px-3 py-1 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
+=======
+                className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium border-b-2 transition-colors ${
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
                   isActive
                     ? 'border-gh-accent text-gh-text bg-gh-canvas'
                     : 'border-transparent text-gh-textSubtle hover:text-gh-textMuted hover:bg-gh-surface/60'
@@ -75,16 +104,23 @@ export default function BottomPanel({
               >
                 <Icon size={11} />
                 {t.label}
+<<<<<<< HEAD
                 {(showBadge || showVerBadge) && (
                   <span className="w-1.5 h-1.5 rounded-full bg-gh-yellow absolute top-1 right-1" />
                 )}
+=======
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
               </button>
             );
           })}
         </div>
 
         {confidenceData && (
+<<<<<<< HEAD
           <div className="flex items-center gap-2 text-xs pr-3 shrink-0">
+=======
+          <div className="flex items-center gap-2 text-xs pr-3">
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
             <span
               className={`badge ${
                 confidenceData.category === 'safe'
@@ -102,8 +138,12 @@ export default function BottomPanel({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-3 text-xs text-gh-text">
+<<<<<<< HEAD
 
         {/* ── Verification ─────────────────────────────────────────────────── */}
+=======
+        {/* Verification */}
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         {activeBottomTab === 'verification' && (
           !verificationData ? (
             <Empty message="Run pipeline to execute verification suite" />
@@ -115,6 +155,10 @@ export default function BottomPanel({
                 <span>Failed: <strong className="text-gh-red">{verificationData.failed_tests}</strong></span>
                 <span>Pass Rate: <strong className="text-gh-accent">{verificationData.pass_rate}%</strong></span>
               </div>
+<<<<<<< HEAD
+=======
+
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-[11px]">
                   <thead>
@@ -135,9 +179,19 @@ export default function BottomPanel({
                         <td className="p-2 font-mono text-gh-textMuted">{r.actual_output || '—'}</td>
                         <td className="p-2">
                           {r.passed ? (
+<<<<<<< HEAD
                             <span className="flex items-center gap-1 text-gh-green font-semibold"><CheckCircle2 size={12} /> PASS</span>
                           ) : (
                             <span className="flex items-center gap-1 text-gh-red font-semibold" title={r.mismatch_details}><XCircle size={12} /> FAIL</span>
+=======
+                            <span className="flex items-center gap-1 text-gh-green font-semibold">
+                              <CheckCircle2 size={12} /> PASS
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1 text-gh-red font-semibold" title={r.mismatch_details}>
+                              <XCircle size={12} /> FAIL
+                            </span>
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
                           )}
                         </td>
                       </tr>
@@ -149,17 +203,30 @@ export default function BottomPanel({
           )
         )}
 
+<<<<<<< HEAD
         {/* ── Confidence Score ──────────────────────────────────────────────── */}
+=======
+        {/* Confidence Score */}
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         {activeBottomTab === 'confidence' && (
           !confidenceData ? (
             <Empty message="Run pipeline to calculate confidence score" />
           ) : (
             <div className="flex flex-col gap-3 max-w-2xl animate-fadeIn">
               <div className="p-3 bg-gh-surface rounded-xl border border-gh-border flex items-center gap-4">
+<<<<<<< HEAD
                 <div className="relative w-16 h-16 shrink-0">
                   <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
                     <circle cx="18" cy="18" r="15.9" fill="none" stroke="#21262d" strokeWidth="3"/>
                     <circle cx="18" cy="18" r="15.9" fill="none"
+=======
+                {/* Score ring */}
+                <div className="relative w-16 h-16 shrink-0">
+                  <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#21262d" strokeWidth="3"/>
+                    <circle
+                      cx="18" cy="18" r="15.9" fill="none"
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
                       stroke={confidenceData.category === 'safe' ? '#3fb950' : confidenceData.category === 'needs_review' ? '#d29922' : '#f85149'}
                       strokeWidth="3"
                       strokeDasharray={`${confidenceData.score} ${100 - confidenceData.score}`}
@@ -173,17 +240,28 @@ export default function BottomPanel({
                 <div>
                   <div className="text-sm font-semibold text-gh-text mb-1">
                     Classification:{' '}
+<<<<<<< HEAD
                     <span className={`${confidenceData.category === 'safe' ? 'text-gh-green' : confidenceData.category === 'needs_review' ? 'text-gh-yellow' : 'text-gh-red'}`}>
+=======
+                    <span className={`${
+                      confidenceData.category === 'safe' ? 'text-gh-green' :
+                      confidenceData.category === 'needs_review' ? 'text-gh-yellow' :
+                      'text-gh-red'
+                    }`}>
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
                       {confidenceData.category.replace('_', ' ').toUpperCase()}
                     </span>
                   </div>
                   <p className="text-gh-textMuted leading-relaxed text-[11px]">{confidenceData.reasoning_text}</p>
+<<<<<<< HEAD
                   {confidenceData.dependency_preservation_pct != null && (
                     <div className="flex gap-3 mt-1.5 text-[10px] text-gh-textSubtle">
                       <span>Dep. Preservation: <strong className="text-gh-accent">{confidenceData.dependency_preservation_pct}%</strong></span>
                       <span>Interface Compat: <strong className="text-gh-accent">{confidenceData.interface_compatibility_pct}%</strong></span>
                     </div>
                   )}
+=======
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
                 </div>
               </div>
               <div className="p-2.5 bg-gh-bg rounded-xl border border-gh-border text-gh-textSubtle leading-relaxed font-mono text-[10px] space-y-1">
@@ -191,13 +269,20 @@ export default function BottomPanel({
                 <p>• Verification Pass Rate × 0.6 (execution across test vectors)</p>
                 <p>• Code Complexity × 0.2 (structural depth & safety)</p>
                 <p>• Mismatch Severity × 0.2 (error drift penalty)</p>
+<<<<<<< HEAD
                 <p>• Project: blended with integration score (dep preservation + import check)</p>
+=======
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
               </div>
             </div>
           )
         )}
 
+<<<<<<< HEAD
         {/* ── Explainability ────────────────────────────────────────────────── */}
+=======
+        {/* Explainability */}
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         {activeBottomTab === 'explainability' && (
           !explainabilityData ? (
             <Empty message="Run pipeline to generate explainability trace" />
@@ -205,7 +290,13 @@ export default function BottomPanel({
             <div className="flex flex-col gap-2 max-w-3xl animate-fadeIn">
               {explainabilityData.reasoning_trace.map((item, i) => (
                 <div key={i} className="p-2.5 bg-gh-surface rounded-xl border border-gh-border flex items-start gap-3">
+<<<<<<< HEAD
                   <div className="w-6 h-6 rounded-lg bg-gh-accentEmphasis text-white font-bold flex items-center justify-center text-[10px] shrink-0">{item.step}</div>
+=======
+                  <div className="w-6 h-6 rounded-lg bg-gh-accentEmphasis text-white font-bold flex items-center justify-center text-[10px] shrink-0">
+                    {item.step}
+                  </div>
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-gh-text text-[11px]">{item.title}</div>
                     <div className="text-gh-textMuted mt-0.5 text-[11px] leading-relaxed">{item.details}</div>
@@ -217,6 +308,7 @@ export default function BottomPanel({
           )
         )}
 
+<<<<<<< HEAD
         {/* ── Dependency Graph (visual SVG panel) ──────────────────────────── */}
         {activeBottomTab === 'dependency' && (
           <DependencyGraphPanel
@@ -235,20 +327,65 @@ export default function BottomPanel({
         )}
 
         {/* ── Business Logic Partitioning ───────────────────────────────────── */}
+=======
+        {/* Dependency Graph */}
+        {activeBottomTab === 'dependency' && (
+          !dependencyData ? (
+            <Empty message="Run pipeline to parse dependency graph" />
+          ) : (
+            <div className="flex flex-col gap-3 animate-fadeIn">
+              <div className="text-[11px] text-gh-textMuted font-mono">
+                Nodes: <span className="text-gh-text font-bold">{dependencyData.nodes.length}</span>
+                <span className="mx-2 text-gh-textSubtle">·</span>
+                Edges: <span className="text-gh-text font-bold">{dependencyData.edges.length}</span>
+              </div>
+              <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+                {dependencyData.nodes.map((node, i) => (
+                  <div key={i} className="p-2.5 bg-gh-surface border border-gh-border rounded-xl flex flex-col gap-1.5">
+                    <span className="font-mono text-gh-text font-medium text-[11px] truncate">{node.label}</span>
+                    <span className={`badge w-fit text-[9px] ${
+                      node.type === 'routine' ? 'bg-gh-accentEmphasis/10 text-gh-accent border border-gh-accent/20' :
+                      node.type === 'global_variable' ? 'bg-gh-purpleBg text-gh-purple border border-gh-purple/20' :
+                      node.type === 'external_routine' ? 'bg-gh-yellowBg text-gh-yellow border border-gh-yellow/20' :
+                      'bg-gh-surface2 text-gh-textSubtle border border-gh-border'
+                    }`}>
+                      {node.type}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        )}
+
+        {/* Business Logic Partitioning */}
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         {activeBottomTab === 'partitioning' && (
           !partitionData ? (
             <Empty message="Run pipeline for business logic partition analysis" />
           ) : (
             <div className="flex flex-col gap-3 animate-fadeIn">
               <div className="p-2.5 bg-gh-surface rounded-xl border border-gh-border flex justify-between items-center">
+<<<<<<< HEAD
                 <span className="text-[11px] text-gh-textMuted">Overall Cohesion: <span className="text-gh-green font-bold text-sm">{partitionData.overall_cohesion}%</span></span>
+=======
+                <span className="text-[11px] text-gh-textMuted">
+                  Overall Cohesion: <span className="text-gh-green font-bold text-sm">{partitionData.overall_cohesion}%</span>
+                </span>
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
                 <span className="text-[10px] text-gh-textSubtle italic">Mono2Micro-inspired</span>
               </div>
               <div className="grid grid-cols-3 gap-3">
                 {partitionData.partitions.map((p, i) => (
                   <div key={i} className="p-3 bg-gh-bg border border-gh-border rounded-xl flex flex-col gap-2">
                     <h4 className="font-semibold text-gh-text text-[11px]">{p.partition_name}</h4>
+<<<<<<< HEAD
                     <div className="text-[10px] text-gh-textSubtle font-mono truncate"><span className="text-gh-accent">{p.member_functions.join(', ')}</span></div>
+=======
+                    <div className="text-[10px] text-gh-textSubtle font-mono truncate">
+                      <span className="text-gh-accent">{p.member_functions.join(', ')}</span>
+                    </div>
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
                     <div className="flex justify-between text-[10px] border-t border-gh-border pt-1.5">
                       <span>Cohesion: <strong className="text-gh-green">{p.cohesion_percentage}%</strong></span>
                       <span>Coupling: <strong className="text-gh-yellow">{p.coupling_percentage}%</strong></span>
@@ -260,7 +397,11 @@ export default function BottomPanel({
           )
         )}
 
+<<<<<<< HEAD
         {/* ── Migration Docs ────────────────────────────────────────────────── */}
+=======
+        {/* Migration Docs */}
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         {activeBottomTab === 'docs' && (
           !documentationData ? (
             <Empty message="Run pipeline to generate technical documentation" />
@@ -270,6 +411,7 @@ export default function BottomPanel({
             </div>
           )
         )}
+<<<<<<< HEAD
 
         {/* ── NEW: Conversion Plan ─────────────────────────────────────────── */}
         {activeBottomTab === 'conversion-plan' && (
@@ -473,6 +615,8 @@ export default function BottomPanel({
             </div>
           )
         )}
+=======
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
       </div>
     </div>
   );

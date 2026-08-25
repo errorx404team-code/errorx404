@@ -1,6 +1,10 @@
 import os
+<<<<<<< HEAD
 import sqlite3
 from sqlalchemy import create_engine, text
+=======
+from sqlalchemy import create_engine
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
@@ -17,6 +21,7 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+<<<<<<< HEAD
 
 def _get_sqlite_path() -> str:
     return DATABASE_URL.replace("sqlite:///", "").replace("./", "")
@@ -118,6 +123,8 @@ def ensure_new_columns():
         pass
 
 
+=======
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 def get_db():
     db = SessionLocal()
     try:

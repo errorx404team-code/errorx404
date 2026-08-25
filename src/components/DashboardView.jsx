@@ -35,8 +35,16 @@ export default function DashboardView() {
     { name: 'Failed <50%', value: summary?.status_breakdown?.failed || 0, color: '#f85149' },
   ];
 
+<<<<<<< HEAD
   const barData = [];
 
+=======
+  const barData = [
+    { name: 'PSOHLDS', confidence: 95.0, cohesion: 92.5 },
+    { name: 'ORWPT', confidence: 91.0, cohesion: 88.0 },
+    { name: 'PSORX0', confidence: 89.5, cohesion: 85.0 },
+  ];
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
   const kpis = [
     {
@@ -88,7 +96,11 @@ export default function DashboardView() {
               Migration Dashboard
             </h1>
             <p className="text-xs text-gh-textSubtle mt-1">
+<<<<<<< HEAD
               Real-time analytics from ErrorX404 MUMPS transformation pipeline
+=======
+              Real-time analytics from VistA MUMPS transformation pipeline
+>>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
             </p>
           </div>
           <button
