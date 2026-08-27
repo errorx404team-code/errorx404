@@ -30,17 +30,20 @@ class MUMPSAdapter(BaseLanguageAdapter):
                 if first_token:
                     routine_name = first_token
 
+            # Check for external routine calls e.g., D ^ORWU, DO ^PSOHL, DO TAG^ROUTINE, $$TAG^ROUTINE
+            ext_calls = re.findall(r"(?:(?:D|DO|G|GOTO)\s+|\$\$)(?:[A-Z0-9%]+\s*\^|\^)([A-Z0-9%]+)", line, re.IGNORECASE)
+            for call in ext_calls:
+                if call.upper() != routine_name.upper():
+                    routine_calls.add(call)
+
             # Check for global variables (e.g., ^DPT, ^PSRX, ^PS(55))
-            found_globals = re.findall(r"\^([A-Z0-9%\(]+)", line)
+            # Must NOT be an external routine call (^ after DO/D/G/GOTO/$$)
+            found_globals = re.findall(r"(?<!\^)(?<!\bDO\s)(?<!\bD\s)(?<!\bGOTO\s)(?<!\bG\s)(?<!\$\$)\^([A-Z0-9%\(]+)", line, re.IGNORECASE)
             for g in found_globals:
                 base_g = g.split("(")[0]
-                if base_g not in ["DO", "QUIT", "SET", "IF", "WRITE"]:
-                    globals_accessed.add(f"^{base_g}")
-
-            # Check for external routine calls e.g., D ^ORWU or DO ^PSOHL
-            ext_calls = re.findall(r"(?:D|DO)\s+\^([A-Z0-9]+)", line, re.IGNORECASE)
-            for call in ext_calls:
-                routine_calls.add(call)
+                if base_g not in ["DO", "QUIT", "SET", "IF", "WRITE", "GOTO", "READ", "KILL", "NEW", "MERGE", "HANG"]:
+                    if base_g not in routine_calls:
+                        globals_accessed.add(f"^{base_g}")
 
             # Check for line tag/label definition at beginning of line (non-whitespace)
             tag_match = re.match(r"^([A-Z0-9%]+)(\(([^\)]*)\))?", line)

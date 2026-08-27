@@ -5,10 +5,7 @@ export default function StatusBar({
   activeRoutine,
   targetLang,
   isProcessing,
-<<<<<<< HEAD
   isUploading: isUploadingProp,
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
   pipelineStep,
   reviewCounts,
   apiKeyStatus,
@@ -18,13 +15,9 @@ export default function StatusBar({
   uploadQueueIndex = 0,
 }) {
   const hasKey = apiKeyStatus?.has_key;
-<<<<<<< HEAD
   const isUploading = isUploadingProp !== undefined
     ? Boolean(isUploadingProp)
     : (uploadQueueTotal > 0 && uploadQueueIndex < uploadQueueTotal);
-=======
-  const isUploading = uploadQueueTotal > 0 && uploadQueueIndex < uploadQueueTotal;
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
   return (
     <div className="h-6 bg-gh-accentEmphasis text-white px-3 flex justify-between items-center text-[11px] font-mono select-none shrink-0 z-20">
@@ -32,11 +25,7 @@ export default function StatusBar({
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5 font-semibold opacity-90">
           <Zap size={11} strokeWidth={2.5} />
-<<<<<<< HEAD
           <span>ErrorX404</span>
-=======
-          <span>VistA Modernizer</span>
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         </div>
 
         {/* Active file breadcrumb */}
@@ -64,13 +53,9 @@ export default function StatusBar({
               <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
             </svg>
             <span className="text-[10px]">
-<<<<<<< HEAD
               {uploadQueueTotal > 0
                 ? `Uploading ${uploadQueueIndex + 1}/${uploadQueueTotal} files`
                 : 'Uploading file…'}
-=======
-              Uploading {uploadQueueIndex + 1}/{uploadQueueTotal} files
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
             </span>
             {activeRoutine && (
               <span className="opacity-60 text-[10px]">— {activeRoutine.name}.m</span>

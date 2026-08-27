@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 """
 Extended dependency_builder.py — now supports workspace-level graph building.
 Keeps existing single-file API fully intact.
@@ -7,15 +6,11 @@ import re
 from app.adapters.mumps_adapter import MUMPSAdapter
 from app.pipeline.file_classifier import extract_generic_dependencies
 
-=======
-from app.adapters.mumps_adapter import MUMPSAdapter
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
 class DependencyBuilder:
     def __init__(self):
         self.adapter = MUMPSAdapter()
 
-<<<<<<< HEAD
     def build_graph(self, raw_code: str, routine_name: str = "ROUTINE", source_language: str = "MUMPS"):
         """
         Module 1b: Dependency Graph Generator (single-file, backward compatible).
@@ -82,12 +77,3 @@ class DependencyBuilder:
                     all_nodes.append({"id": nid, "label": nid, "type": "routine"})
 
         return {"nodes": all_nodes, "edges": all_edges}
-=======
-    def build_graph(self, raw_code: str, routine_name: str = "ROUTINE"):
-        """
-        Module 1b: Dependency Graph Generator
-        Parses calls, globals, and subroutines into nodes and edges.
-        """
-        graph_data = self.adapter.extract_dependencies(raw_code)
-        return graph_data
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab

@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 from sqlalchemy import Column, Integer, String, Text, Float, Boolean, DateTime, ForeignKey, Index
-=======
-from sqlalchemy import Column, Integer, String, Text, Float, Boolean, DateTime, ForeignKey
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
@@ -14,13 +10,10 @@ class Routine(Base):
     name = Column(String(100), nullable=False)
     source_language = Column(String(50), default="MUMPS")
     raw_code = Column(Text, nullable=False)
-<<<<<<< HEAD
     relative_path = Column(String(500), nullable=True)
     workspace_id = Column(String(100), nullable=True, index=True)
     # File classification: CONVERT | PRESERVE | ADAPT | GENERATE | REVIEW_REQUIRED
     file_action = Column(String(50), nullable=True, default="CONVERT")
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     created_at = Column(DateTime, default=datetime.utcnow)
 
     specifications = relationship("Specification", back_populates="routine", cascade="all, delete-orphan")
@@ -36,15 +29,9 @@ class Specification(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     routine_id = Column(Integer, ForeignKey("routines.id"), nullable=False)
-<<<<<<< HEAD
-    spec_json = Column(Text, nullable=False)
-    spec_readable_text = Column(Text, nullable=False)
-    business_rules_json = Column(Text, nullable=False)
-=======
     spec_json = Column(Text, nullable=False)  # JSON string
     spec_readable_text = Column(Text, nullable=False)
     business_rules_json = Column(Text, nullable=False)  # JSON string of explicit business rules
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     created_at = Column(DateTime, default=datetime.utcnow)
 
     routine = relationship("Routine", back_populates="specifications")
@@ -58,21 +45,17 @@ class Conversion(Base):
     target_language = Column(String(50), default="Python")
     generated_code = Column(Text, nullable=False)
     model_used = Column(String(100), default="gemini-2.0-flash")
-<<<<<<< HEAD
     # Traceability comment injected in generated code header
     traceability_header = Column(Text, nullable=True)
     # Conversion source: REAL_GEMINI | DEMO_FALLBACK | FAILED
     # NEVER display DEMO_FALLBACK or FAILED output as a successful real AI conversion.
     conversion_source = Column(String(50), nullable=True, default="UNKNOWN")
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     created_at = Column(DateTime, default=datetime.utcnow)
 
     routine = relationship("Routine", back_populates="conversions")
     verification_results = relationship("VerificationResult", back_populates="conversion", cascade="all, delete-orphan")
     confidence_score = relationship("ConfidenceScore", back_populates="conversion", uselist=False, cascade="all, delete-orphan")
     review_decision = relationship("ReviewDecision", back_populates="conversion", uselist=False, cascade="all, delete-orphan")
-<<<<<<< HEAD
     human_explanation = relationship("HumanExplanation", back_populates="conversion", uselist=False, cascade="all, delete-orphan")
 
 
@@ -90,8 +73,6 @@ class HumanExplanation(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     conversion = relationship("Conversion", back_populates="human_explanation")
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
 
 class TestCase(Base):
@@ -101,12 +82,8 @@ class TestCase(Base):
     routine_id = Column(Integer, ForeignKey("routines.id"), nullable=False)
     input_json = Column(Text, nullable=False)
     expected_output = Column(Text, nullable=False)
-<<<<<<< HEAD
-    source = Column(String(50), default="reference_verified")
-    test_type = Column(String(50), default="unit")  # unit | integration | dependency | interface
-=======
     source = Column(String(50), default="reference_verified")  # live_interpreter or reference_verified
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
+    test_type = Column(String(50), default="unit")  # unit | integration | dependency | interface
 
     routine = relationship("Routine", back_populates="test_cases")
     verification_results = relationship("VerificationResult", back_populates="test_case", cascade="all, delete-orphan")
@@ -135,12 +112,9 @@ class ConfidenceScore(Base):
     score = Column(Float, nullable=False)  # 0-100
     category = Column(String(50), nullable=False)  # safe / needs_review / failed
     reasoning_text = Column(Text, nullable=False)
-<<<<<<< HEAD
     # Dependency-aware score breakdown
     dependency_preservation_pct = Column(Float, nullable=True, default=100.0)
     interface_compatibility_pct = Column(Float, nullable=True, default=100.0)
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
     conversion = relationship("Conversion", back_populates="confidence_score")
 
@@ -162,7 +136,6 @@ class DependencyGraphNode(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     routine_id = Column(Integer, ForeignKey("routines.id"), nullable=False)
-<<<<<<< HEAD
     node_id = Column(String(200), nullable=False)
     node_type = Column(String(50), nullable=False)  # function, global_variable, external_routine, table, api, config
     related_node_id = Column(String(200), nullable=True)
@@ -173,12 +146,6 @@ class DependencyGraphNode(Base):
     source_symbol = Column(String(200), nullable=True)
     target_symbol = Column(String(200), nullable=True)
     confidence = Column(Float, nullable=True, default=1.0)
-=======
-    node_id = Column(String(100), nullable=False)
-    node_type = Column(String(50), nullable=False)  # function, global_variable, external_routine
-    related_node_id = Column(String(100), nullable=True)
-    dependency_type = Column(String(50), nullable=False)  # calls, reads, writes, includes
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
     routine = relationship("Routine", back_populates="dependencies")
 
@@ -188,17 +155,10 @@ class BusinessLogicPartition(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     routine_id = Column(Integer, ForeignKey("routines.id"), nullable=False)
-<<<<<<< HEAD
-    partition_name = Column(String(100), nullable=False)
-    member_functions_json = Column(Text, nullable=False)
-    cohesion_percentage = Column(Float, nullable=False)
-    coupling_percentage = Column(Float, nullable=False)
-=======
     partition_name = Column(String(100), nullable=False)  # e.g., "Patient Identification", "Prescription Validation"
     member_functions_json = Column(Text, nullable=False)  # list of tag names in JSON
     cohesion_percentage = Column(Float, nullable=False)  # 0-100
     coupling_percentage = Column(Float, nullable=False)  # 0-100
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
     routine = relationship("Routine", back_populates="partitions")
 
@@ -214,10 +174,9 @@ class ChatMessage(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     routine = relationship("Routine", back_populates="chat_messages")
-<<<<<<< HEAD
 
 
-# ─── NEW: Workspace-level cross-file dependency edges ─────────────────────────
+# ─── Workspace-level cross-file dependency edges ─────────────────────────
 
 class WorkspaceDependencyEdge(Base):
     """Stores cross-file dependency edges discovered at workspace level."""
@@ -278,5 +237,3 @@ class ProjectVerificationResult(Base):
     overall_status = Column(String(50), nullable=False, default="NOT_VERIFIED")
     report_text = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab

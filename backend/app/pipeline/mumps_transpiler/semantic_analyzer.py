@@ -377,6 +377,7 @@ class MumpsSemanticAnalyzer:
         - Any label explicitly NEWs variables
         - A called label NEWs variables used by the caller
         - Argumentless DO exists
+        - Variables are shared across multiple labels (MUMPS dynamic scope)
         """
         for li in self._model.labels:
             if li.new_vars:
@@ -384,10 +385,14 @@ class MumpsSemanticAnalyzer:
         for li in self._model.labels:
             if not li.calls_labels:
                 continue
-            caller_vars = {v for v, vi in self._model.variables.items()
-                           if self._current_label in vi.used_in_labels}
             for called in li.calls_labels:
                 called_li = self._model.label_map.get(called)
                 if called_li and called_li.new_vars:
                     return True
+        # If any local variable is accessed across multiple labels without being a parameter
+        for vname, vinfo in self._model.variables.items():
+            if vinfo.is_param or vinfo.is_global or vinfo.is_special:
+                continue
+            if len(vinfo.used_in_labels) > 1:
+                return True
         return False

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 """
 Extended converter.py — dependency-aware code transformation.
 Existing single-file convert_code() API remains intact.
@@ -145,16 +144,6 @@ class CodeConverter:
 
         Raises:
             GeminiAPIError: if API key is configured but Gemini fails.
-=======
-import json
-from app.llm_provider import llm_provider
-
-class CodeConverter:
-    def convert_code(self, spec_json_str: str, business_rules_json_str: str, target_language: str = "Python") -> str:
-        """
-        Module 2: Spec-grounded target code generation (Python / R).
-        Preserves all extracted business rules.
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         """
         try:
             spec = json.loads(spec_json_str)
@@ -163,7 +152,6 @@ class CodeConverter:
             spec = {"summary": "Healthcare logic routine"}
             rules = ["Preserve all parameter validation and output structures"]
 
-<<<<<<< HEAD
         # Build traceability header
         trace_header = ""
         if traceability_id:
@@ -198,11 +186,20 @@ If a dependency cannot be safely translated, mark it as: # REVIEW_REQUIRED: <rea
 === EXPLICIT BUSINESS RULES TO PRESERVE (HIGHEST PRIORITY) ===
 {json.dumps(rules, indent=2)}
 
+=== STRICT RULES FOR LOCAL VS EXTERNAL ROUTINES ===
+1. Every routine/subroutine/tag defined in THIS file MUST be converted into a local function in this SAME generated file.
+2. Call local functions directly (e.g. checkage(...)).
+3. NEVER generate imports or wrapper functions for subroutines/tags defined in this same file.
+4. ONLY generate imports (e.g. `from <module_name> import <symbol>`) when:
+   - The called routine actually exists in ANOTHER file and is confirmed by the dependency context.
+   - The routine is NOT defined in this file.
+5. If a routine/subroutine is defined in this file, keep it local, call it directly, and do NOT create artificial dependencies.
+
 === REQUIREMENTS ===
 1. Implement clean object-oriented or modular {target_language} code.
 2. Every business rule MUST have a docstring/comment reference (e.g., # RULE-1: ...).
-3. ALL cross-file dependencies shown in the dependency map MUST be preserved as imports or equivalent.
-4. If this module depends on another converted module, generate: from <module_name> import <symbol>
+3. ALL true cross-file dependencies confirmed in the dependency map MUST be preserved as imports or equivalent.
+4. If this module depends on an external converted module, generate: from <module_name> import <symbol>
 5. If this module's interface contract lists exports, implement ALL of them with matching signatures.
 6. Include error handling and clean data structures.
 7. Output ONLY executable, syntactically valid {target_language} code.
@@ -214,7 +211,7 @@ Preserve:
 - Business rules
 - Function behavior and signatures
 - Inputs/outputs
-- Cross-file dependencies
+- Cross-file dependencies (for true external routines only)
 - Database dependencies (MUMPS globals → Python dict/ORM)
 - API dependencies
 - Shared data relationships
@@ -227,7 +224,7 @@ Preserve:
             prompt,
             system_instruction=(
                 f"You are converting one module of a larger legacy {source_language} application to {target_language}. "
-                "Preserve ALL cross-file dependencies. Generate production-grade code. "
+                "Preserve ALL true cross-file dependencies while keeping local subroutines local. Generate production-grade code. "
                 "Never silently drop a dependency — if unsure, mark it REVIEW_REQUIRED."
             )
         )
@@ -246,14 +243,15 @@ You are an expert software engineer converting legacy MUMPS source code into idi
 
 CRITICAL RULES:
 - Base conversion ONLY on the actual business logic in the specification below.
-- Do NOT invent functions, APIs, business rules, or data structures not present in the source.
+- ALL subroutines/tags defined in this routine MUST be converted into local functions within this same file.
+- Call local functions directly (e.g. checkage(...)).
+- Do NOT generate imports for subroutines or functions defined in this same file.
+- Do NOT generate wrapper functions that delegate to external imports for locally defined routines.
+- Only generate external imports if a routine is explicitly an external routine call (e.g. ^OTHERROUTINE) from another file.
+- Do NOT invent external dependencies, functions, APIs, business rules, or data structures not present in the source.
 - If a MUMPS construct cannot be mapped exactly, add a TODO comment explaining what needs human review.
 - Preserve all global variable access patterns (e.g. ^DPT → abstracted repository class).
 - Every function must be traceable back to a MUMPS tag or construct.
-=======
-        prompt = f"""
-You are an expert software engineer converting legacy spec specifications into idiomatic, robust {target_language} code.
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
 BUSINESS SPECIFICATION:
 {json.dumps(spec, indent=2)}
@@ -263,7 +261,6 @@ EXPLICIT BUSINESS RULES TO PRESERVE (MAIN FOCUS):
 
 REQUIREMENTS:
 1. Implement clean object-oriented or modular {target_language} code.
-<<<<<<< HEAD
 2. Every business rule MUST have a docstring/comment reference (e.g., # RULE-1: ...).
 3. Include error handling and clean data structures.
 4. Output ONLY executable, syntactically valid {target_language} code, with no markdown code blocks surrounding if possible.
@@ -288,25 +285,3 @@ REQUIREMENTS:
             if code_blocks:
                 cleaned = max(code_blocks, key=len)
         return cleaned.strip()
-=======
-2. Every business rule MUST have a docstring reference (e.g., # RULE-1: ...).
-3. Include error handling and clean data structures.
-4. Output ONLY executable, syntactically valid {target_language} code, with no markdown code blocks surrounding if possible, or clean standard code blocks.
-"""
-
-        generated = llm_provider.generate_completion(
-            prompt,
-            system_instruction=f"Generate production-grade, highly readable {target_language} code preserving exact business logic."
-        )
-
-        # Clean markdown ticks if present
-        cleaned_code = generated
-        if "```python" in cleaned_code:
-            cleaned_code = cleaned_code.split("```python")[1].split("```")[0]
-        elif "```r" in cleaned_code:
-            cleaned_code = cleaned_code.split("```r")[1].split("```")[0]
-        elif "```" in cleaned_code:
-            cleaned_code = cleaned_code.split("```")[1].split("```")[0]
-
-        return cleaned_code.strip()
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab

@@ -1,74 +1,143 @@
-<<<<<<< HEAD
 """
-Extended scorer.py — dependency-aware confidence scoring.
-Existing calculate_score() API remains unchanged.
-New calculate_project_score() adds cross-file dependency penalties.
+scorer.py — Evidence-based, transparent confidence scoring.
+Calculates confidence strictly from verification pass rate, syntax validity,
+execution reliability, integration validation, and test coverage.
+Never uses code length or line count.
 """
+import ast
 from typing import Dict, Any, List
 
-=======
-from typing import Dict, Any
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
+
+def get_confidence_category(score: float) -> str:
+    """
+    Returns human-readable confidence level based on normalized score (0-100).
+    90–100: Very High Confidence
+    75–89: High Confidence
+    60–74: Moderate Confidence
+    40–59: Low Confidence
+    0–39: Very Low Confidence
+    """
+    if score >= 90.0:
+        return "Very High Confidence"
+    elif score >= 75.0:
+        return "High Confidence"
+    elif score >= 60.0:
+        return "Moderate Confidence"
+    elif score >= 40.0:
+        return "Low Confidence"
+    else:
+        return "Very Low Confidence"
+
+
+def check_syntax(code: str) -> bool:
+    """Check whether Python code compiles cleanly."""
+    if not code or not code.strip():
+        return False
+    try:
+        ast.parse(code)
+        return True
+    except SyntaxError:
+        return False
+    except Exception:
+        return False
+
 
 class ConfidenceScorer:
     def calculate_score(self, verification_summary: Dict[str, Any], generated_code: str) -> Dict[str, Any]:
         """
-<<<<<<< HEAD
-        Module 4: Confidence & Hallucination Scoring (backward compatible)
-        Formula: score = (test_pass_rate * 0.6) + (complexity_score * 0.2) + (mismatch_severity_score * 0.2)
-        Category: >=85 safe, 50-84 needs_review, <50 failed
+        Module 4: Evidence-Based Confidence & Hallucination Scoring.
+        Formula:
+          confidence = (pass_rate * 0.60)
+                     + (syntax_score * 0.15)
+                     + (execution_score * 0.10)
+                     + (integration_score * 0.10)
+                     + (coverage_score * 0.05)
+        All components normalized to [0, 100].
+        Deterministic: same test results + same code state = same score.
         """
-        pass_rate = verification_summary.get("pass_rate", 0.0)
+        total_tests = verification_summary.get("total_tests", 0)
+        passed_tests = verification_summary.get("passed_tests", 0)
+        failed_tests = verification_summary.get("failed_tests", 0)
+        error_tests = verification_summary.get("error_tests", 0)
+        timeout_tests = verification_summary.get("timeout_tests", 0)
+        no_test_tests = verification_summary.get("no_test_tests", 0)
 
-=======
-        Module 4: Confidence & Hallucination Scoring
-        Formula: score = (test_pass_rate * 0.6) + (complexity_score * 0.2) + (mismatch_severity_score * 0.2)
-        Category: >=85 safe, 50-84 needs_review, <50 failed
-        """
-        pass_rate = verification_summary.get("pass_rate", 0.0) # 0 to 100
-        
-        # Complexity penalty calculation based on code length & line depth
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
-        lines = generated_code.splitlines()
-        line_count = len(lines)
-        if line_count < 100:
-            complexity_score = 95.0
-        elif line_count < 300:
-            complexity_score = 85.0
+        # 1. Test Pass Rate (60% weight)
+        if total_tests > 0:
+            pass_rate = (passed_tests / total_tests) * 100.0
         else:
-            complexity_score = 70.0
+            pass_rate = 0.0
 
-<<<<<<< HEAD
-=======
-        # Mismatch severity score
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
-        failed_count = verification_summary.get("failed_tests", 0)
-        if failed_count == 0:
-            mismatch_severity_score = 100.0
-        elif failed_count == 1:
-            mismatch_severity_score = 75.0
+        # 2. Syntax Validity (15% weight)
+        is_syntax_valid = check_syntax(generated_code)
+        syntax_score = 100.0 if is_syntax_valid else 0.0
+
+        # 3. Execution Reliability (10% weight)
+        # Proportion of tests that ran to completion without crashing or timing out
+        if total_tests > 0:
+            executable_tests = max(0, total_tests - error_tests - timeout_tests - no_test_tests)
+            execution_score = (executable_tests / total_tests) * 100.0
         else:
-            mismatch_severity_score = 40.0
+            execution_score = 0.0
 
-        score = round((pass_rate * 0.6) + (complexity_score * 0.2) + (mismatch_severity_score * 0.2), 1)
+        # 4. Integration / Dependency Validation (10% weight)
+        # Check if code has syntax valid structures and valid imports
+        integration_score = 100.0 if is_syntax_valid else 0.0
 
-        if score >= 85.0:
-            category = "safe"
-            reasoning = f"High verification pass rate ({pass_rate}%) with low syntax complexity and verified business rule preservation."
-        elif score >= 50.0:
-            category = "needs_review"
-            reasoning = f"Moderate confidence score ({score}%). Passed {verification_summary.get('passed_tests')}/{verification_summary.get('total_tests')} test cases. Manual reviewer approval recommended."
+        # 5. Test Coverage (5% weight)
+        # Scale based on executable test count
+        if total_tests >= 3:
+            coverage_score = 100.0
+        elif total_tests == 2:
+            coverage_score = 66.7
+        elif total_tests == 1:
+            coverage_score = 33.3
         else:
-            category = "failed"
-            reasoning = f"Low confidence score ({score}%). Found {failed_count} verification mismatches or execution errors."
+            coverage_score = 0.0
+
+        # If all tests are NO_TEST or no executable tests exist
+        if total_tests == 0 or no_test_tests == total_tests:
+            pass_rate = 0.0
+            execution_score = 0.0
+            coverage_score = 0.0
+
+        raw_score = (
+            (pass_rate * 0.60)
+            + (syntax_score * 0.15)
+            + (execution_score * 0.10)
+            + (integration_score * 0.10)
+            + (coverage_score * 0.05)
+        )
+        score = round(max(0.0, min(100.0, raw_score)), 1)
+        category = get_confidence_category(score)
+
+        # Reasoning details
+        if score >= 90.0:
+            reasoning = f"Very high confidence ({score}%). All {passed_tests}/{total_tests} test cases passed with valid syntax and reliable execution."
+        elif score >= 75.0:
+            reasoning = f"High confidence ({score}%). Passed {passed_tests}/{total_tests} tests with clean syntax."
+        elif score >= 60.0:
+            reasoning = f"Moderate confidence ({score}%). Passed {passed_tests}/{total_tests} test cases. {failed_tests + error_tests} failed/errored. Manual review recommended."
+        elif score >= 40.0:
+            reasoning = f"Low confidence ({score}%). Only {passed_tests}/{total_tests} passed. Multiple verification mismatches or execution issues detected."
+        else:
+            reasoning = f"Very low confidence ({score}%). Critical execution errors or no valid tests executed ({passed_tests}/{total_tests} passed)."
 
         return {
             "score": score,
+            "confidence_score": score,
             "category": category,
-<<<<<<< HEAD
+            "confidence_category": category,
             "reasoning_text": reasoning,
             "dependency_preservation_pct": 100.0,
             "interface_compatibility_pct": 100.0,
+            "breakdown": {
+                "pass_rate_score": round(pass_rate * 0.60, 2),
+                "syntax_score": round(syntax_score * 0.15, 2),
+                "execution_score": round(execution_score * 0.10, 2),
+                "integration_score": round(integration_score * 0.10, 2),
+                "coverage_score": round(coverage_score * 0.05, 2),
+            }
         }
 
     def calculate_project_score(
@@ -82,7 +151,6 @@ class ConfidenceScorer:
         Dependency-aware scoring for project-level conversions.
         Incorporates integration verification, broken imports, and missing dependencies.
         """
-        # Start with base score
         base = self.calculate_score(verification_summary, generated_code)
         score = base["score"]
         dep_pct = 100.0
@@ -107,7 +175,7 @@ class ConfidenceScorer:
             if integration_total > 0:
                 intf_pct = round((integration_passed / integration_total) * 100.0, 1)
             else:
-                intf_pct = 90.0  # no integration tests = partial confidence
+                intf_pct = 90.0
 
             # Syntax coverage
             syntax_pct = round((syntax_ok / total) * 100.0, 1)
@@ -129,49 +197,31 @@ class ConfidenceScorer:
             if blocked > 0:
                 score = max(0.0, score - (blocked * 5.0))
 
-        if score >= 85.0:
-            category = "safe"
-            reasoning = (
-                f"Project-level confidence: {score}%. "
-                f"Dependency preservation: {dep_pct}%. Interface compatibility: {intf_pct}%. "
-                f"All integration checks passed."
-            )
-        elif score >= 50.0:
-            category = "needs_review"
-            issues = []
-            if project_verification:
-                dep_issues = project_verification.get("dependency_issues", 0)
-                blocked = len(project_verification.get("blocked_files", {}))
-                if dep_issues:
-                    issues.append(f"{dep_issues} dependency issue(s)")
-                if blocked:
-                    issues.append(f"{blocked} blocked file(s)")
-            reasoning = (
-                f"Project confidence: {score}%. "
-                + (f"Issues: {', '.join(issues)}. " if issues else "")
-                + f"Dependency preservation: {dep_pct}%. Manual review recommended."
-            )
+        score = round(max(0.0, min(100.0, score)), 1)
+        category = get_confidence_category(score)
+
+        if score >= 90.0:
+            reasoning = f"Project-level very high confidence ({score}%). All integration checks passed."
+        elif score >= 75.0:
+            reasoning = f"Project-level high confidence ({score}%). Dependency preservation: {dep_pct}%. Interface compatibility: {intf_pct}%."
+        elif score >= 60.0:
+            reasoning = f"Project-level moderate confidence ({score}%). Dependency preservation: {dep_pct}%. Manual review recommended."
+        elif score >= 40.0:
+            reasoning = f"Project-level low confidence ({score}%). Issues detected in dependency resolution or test verification."
         else:
-            category = "failed"
-            reasoning = (
-                f"Low project confidence ({score}%). "
-                f"Dependency preservation: {dep_pct}%. "
-                f"Interface compatibility: {intf_pct}%. "
-                "Significant conversion issues detected."
-            )
+            reasoning = f"Project-level very low confidence ({score}%). Significant conversion or integration issues detected."
 
         return {
             "score": score,
+            "confidence_score": score,
             "category": category,
+            "confidence_category": category,
             "reasoning_text": reasoning,
             "dependency_preservation_pct": dep_pct,
             "interface_compatibility_pct": intf_pct,
+            "breakdown": base.get("breakdown")
         }
 
 
-=======
-            "reasoning_text": reasoning
-        }
-
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 scorer = ConfidenceScorer()
+

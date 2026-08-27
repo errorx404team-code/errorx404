@@ -30,47 +30,40 @@ export default function DashboardView() {
   }
 
   const pieData = [
-    { name: 'Safe ≥85%', value: summary?.status_breakdown?.safe || 2, color: '#3fb950' },
-    { name: 'Needs Review', value: summary?.status_breakdown?.needs_review || 1, color: '#d29922' },
+    { name: 'Safe ≥85%', value: summary?.status_breakdown?.safe || 0, color: '#3fb950' },
+    { name: 'Needs Review', value: summary?.status_breakdown?.needs_review || 0, color: '#d29922' },
     { name: 'Failed <50%', value: summary?.status_breakdown?.failed || 0, color: '#f85149' },
   ];
 
-<<<<<<< HEAD
-  const barData = [];
-
-=======
-  const barData = [
-    { name: 'PSOHLDS', confidence: 95.0, cohesion: 92.5 },
-    { name: 'ORWPT', confidence: 91.0, cohesion: 88.0 },
-    { name: 'PSORX0', confidence: 89.5, cohesion: 85.0 },
+  const barData = summary?.quality_metrics || [
+    { name: 'Avg Quality', confidence: summary?.avg_confidence_score || 90.0, cohesion: summary?.avg_partition_cohesion || 85.0 },
   ];
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
   const kpis = [
     {
       label: 'Total Routines',
-      value: summary?.total_routines || 3,
+      value: summary?.total_routines || 0,
       icon: FileCheck,
       color: 'text-gh-accent',
       bg: 'bg-gh-accentEmphasis/10 border-gh-accent/20',
     },
     {
       label: 'Avg Confidence',
-      value: `${summary?.avg_confidence_score || 92.5}%`,
+      value: `${summary?.avg_confidence_score || 0}%`,
       icon: ShieldCheck,
       color: 'text-gh-green',
       bg: 'bg-gh-greenBg border-gh-greenDim/30',
     },
     {
       label: 'Logic Cohesion',
-      value: `${summary?.avg_partition_cohesion || 88.5}%`,
+      value: `${summary?.avg_partition_cohesion || 0}%`,
       icon: Layers,
       color: 'text-gh-purple',
       bg: 'bg-gh-purpleBg border-gh-purple/20',
     },
     {
       label: 'Business Logic Coverage',
-      value: '100%',
+      value: `${summary?.business_logic_coverage_pct || 100}%`,
       icon: TrendingUp,
       color: 'text-gh-orange',
       bg: 'bg-orange-400/10 border-orange-400/20',
@@ -96,11 +89,7 @@ export default function DashboardView() {
               Migration Dashboard
             </h1>
             <p className="text-xs text-gh-textSubtle mt-1">
-<<<<<<< HEAD
               Real-time analytics from ErrorX404 MUMPS transformation pipeline
-=======
-              Real-time analytics from VistA MUMPS transformation pipeline
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
             </p>
           </div>
           <button
@@ -180,15 +169,15 @@ export default function DashboardView() {
         <div className="mt-5 p-4 bg-gh-canvas border border-gh-border rounded-xl flex items-center gap-6 flex-wrap">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-gh-green" />
-            <span className="text-xs text-gh-textMuted">Total Conversions: <strong className="text-gh-text">{summary?.total_conversions || 3}</strong></span>
+            <span className="text-xs text-gh-textMuted">Total Conversions: <strong className="text-gh-text">{summary?.total_conversions || 0}</strong></span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-gh-accent" />
-            <span className="text-xs text-gh-textMuted">Avg Score: <strong className="text-gh-text">{summary?.avg_confidence_score || 92.5}%</strong></span>
+            <span className="text-xs text-gh-textMuted">Avg Score: <strong className="text-gh-text">{summary?.avg_confidence_score || 0}%</strong></span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-gh-purple" />
-            <span className="text-xs text-gh-textMuted">Business Logic Coverage: <strong className="text-gh-green">100%</strong></span>
+            <span className="text-xs text-gh-textMuted">Business Logic Coverage: <strong className="text-gh-green">{summary?.business_logic_coverage_pct || 100}%</strong></span>
           </div>
           <div className="ml-auto text-[10px] text-gh-textSubtle italic">
             SQL Aggregated · Live Data

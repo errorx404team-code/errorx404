@@ -1,10 +1,6 @@
 import json
 from app.adapters.mumps_adapter import MUMPSAdapter
-<<<<<<< HEAD
 from app.llm_provider import llm_provider, GeminiAPIError
-=======
-from app.llm_provider import llm_provider
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
 class SpecAnalyzer:
     def __init__(self):
@@ -14,7 +10,6 @@ class SpecAnalyzer:
         """
         Module 1: Extract spec_json, spec_readable_text, and business_rules_json.
         Preserving business logic is the MAIN focus.
-<<<<<<< HEAD
 
         STRICT RULE:
         - When a Gemini API key is configured, real Gemini analysis is REQUIRED.
@@ -25,11 +20,6 @@ class SpecAnalyzer:
         """
         parsed = self.mumps_adapter.parse_routine(raw_code)
 
-=======
-        """
-        parsed = self.mumps_adapter.parse_routine(raw_code)
-        
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         prompt = f"""
 Analyze the following legacy {source_language} routine carefully.
 Extract the core business logic, functional specifications, and explicit business rules.
@@ -49,7 +39,6 @@ Return a valid JSON object with the following fields:
 3. "business_rules": Array of explicit strings detailing rules (e.g. "RULE-1: Patient DFN must exist in ^DPT").
 4. "globals_accessed": Array of global names.
 5. "edge_cases": Array of potential failure points or boundaries.
-<<<<<<< HEAD
 
 IMPORTANT:
 - Base analysis ONLY on the source code shown above.
@@ -61,20 +50,12 @@ IMPORTANT:
         llm_response = llm_provider.generate_completion(
             prompt,
             system_instruction="You are a senior healthcare software architect specializing in MUMPS VistA modernization. Focus strictly on business logic preservation. Base all analysis on the actual source code provided — never invent behavior.",
-=======
-"""
-
-        llm_response = llm_provider.generate_completion(
-            prompt,
-            system_instruction="You are a senior healthcare software architect specializing in MUMPS VistA modernization. Focus strictly on business logic preservation.",
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
             json_mode=True
         )
 
         try:
             spec_data = json.loads(llm_response)
         except Exception:
-<<<<<<< HEAD
             # JSON parse failed — build a minimal spec from the parsed structure.
             # This uses REAL parsed data (not hardcoded demo data) regardless of API key status.
             spec_data = {
@@ -86,16 +67,6 @@ IMPORTANT:
                 ] or ["RULE-1: Ensure non-null parameters before subroutine entry"],
                 "globals_accessed": parsed["globals_accessed"],
                 "edge_cases": ["AI JSON parse failed — manual review of business rules required"]
-=======
-            spec_data = {
-                "summary": f"Routine {parsed['routine_name']} processing EHR records and global data structures.",
-                "functions": [{"name": t["name"], "parameters": t["parameters"], "purpose": f"Process logic for {t['name']}"} for t in parsed["tags"]],
-                "business_rules": [
-                    f"RULE-1: Validate all inputs before accessing global {g}" for g in parsed["globals_accessed"]
-                ] or ["RULE-1: Ensure non-null parameters before subroutine entry"],
-                "globals_accessed": parsed["globals_accessed"],
-                "edge_cases": ["Invalid patient DFN lookup", "Missing prescription global entry"]
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
             }
 
         readable_text = f"# Business Specification for {parsed['routine_name']}\n\n"
@@ -107,13 +78,10 @@ IMPORTANT:
         for func in spec_data.get("functions", []):
             readable_text += f"- **{func.get('name')}**: {func.get('purpose')}\n"
 
-<<<<<<< HEAD
         # Embed the raw MUMPS source in the spec so the converter can use it for
         # the static transpiler path (Gemini-free conversion).
         spec_data["_mumps_source"] = raw_code
 
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         return {
             "spec_json": json.dumps(spec_data, indent=2),
             "spec_readable_text": readable_text,

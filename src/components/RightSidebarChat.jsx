@@ -1,28 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-<<<<<<< HEAD
 import { Send, Bot, User, X, Sparkles, MessageCircle, ShieldCheck, Copy, Check } from 'lucide-react';
 import logoImg from '../assets/temp_image_1786523047062.jpeg';
 
 /**
  * CleanMessage — strips markdown noise from AI chat responses so
  * non-technical users see clean, readable plain text.
- *
- * Converts:
- *   **bold** → plain text   (bold rendered via span weight)
- *   ### Heading → section heading
- *   ## / # headings → smaller heading
- *   `code` → mono span
- *   Bullet lines starting with - or * → clean bullets
- *   Numbered lines → preserved as-is
- *   Double blank lines → paragraph break
  */
 function CleanMessage({ text }) {
   if (!text) return null;
 
-  // Strip outer whitespace
   const raw = text.trim();
-
-  // Split into paragraphs on blank lines
   const paragraphs = raw.split(/\n{2,}/);
 
   return (
@@ -31,7 +18,6 @@ function CleanMessage({ text }) {
         const lines = para.split('\n').filter(l => l.trim());
         if (!lines.length) return null;
 
-        // Detect heading lines (### or ** at start, or ALL-CAPS short line)
         const firstLine = lines[0].trim();
         const isHeading = /^#{1,3}\s/.test(firstLine) || /^\*\*[^*]+\*\*$/.test(firstLine);
 
@@ -50,7 +36,6 @@ function CleanMessage({ text }) {
           );
         }
 
-        // Detect bullet list
         const isBulletList = lines.every(l => /^[-*•]\s/.test(l.trim()) || /^\d+\.\s/.test(l.trim()));
         if (isBulletList) {
           return (
@@ -68,7 +53,6 @@ function CleanMessage({ text }) {
           );
         }
 
-        // Normal paragraph
         return (
           <p key={pi} className="text-[11px] text-gh-text leading-relaxed">
             {lines.map((l, li) => (
@@ -84,7 +68,6 @@ function CleanMessage({ text }) {
   );
 }
 
-/** Renders a single line, handling inline bullet/numbered prefix */
 function CleanLine({ text }) {
   const clean = text.replace(/^[-*•]\s+/, '').replace(/^\d+\.\s+/, '');
   const isBullet = /^[-*•\d]/.test(text.trim());
@@ -96,9 +79,7 @@ function CleanLine({ text }) {
   );
 }
 
-/** Strip inline markdown: **bold**, `code`, [text](url) */
 function CleanInline({ text }) {
-  // Split on **bold** and `code` patterns
   const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
   return (
     <>
@@ -109,7 +90,6 @@ function CleanInline({ text }) {
         if (/^`(.+)`$/.test(part)) {
           return <code key={i} className="text-[10px] text-gh-accent font-mono bg-gh-surface2 px-1 rounded">{part.replace(/^`(.+)`$/, '$1')}</code>;
         }
-        // Remove any remaining stray # symbols at the start
         return <React.Fragment key={i}>{part.replace(/^#+\s*/, '')}</React.Fragment>;
       })}
     </>
@@ -139,20 +119,13 @@ function CopyButton({ text }) {
     </button>
   );
 }
-=======
-import { Send, Bot, User, X, Sparkles, MessageCircle } from 'lucide-react';
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
 export default function RightSidebarChat({ isOpen, onClose, onOpen, activeRoutine, conversion }) {
   const [messages, setMessages] = useState([
     {
       id: 'welcome',
       role: 'assistant',
-<<<<<<< HEAD
       message_text: "Hi! I'm your AI Modernization Copilot.\n\nI answer questions backed by real evidence from your MUMPS source, spec, business rules, test results and confidence scores — never from guesswork.\n\nAsk me anything about your code.",
-=======
-      message_text: "Hi! I'm your AI Modernization Copilot powered by Gemini.\n\nAsk me anything about your MUMPS code, business rules, or the converted output.",
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     }
   ]);
   const [inputQuestion, setInputQuestion] = useState('');
@@ -201,16 +174,12 @@ export default function RightSidebarChat({ isOpen, onClose, onOpen, activeRoutin
     }
   };
 
-<<<<<<< HEAD
   const quickPrompts = conversion ? [
     'What does this routine do in plain English?',
     'Why is the confidence score what it is?',
     'What business rules were preserved?',
     'What changed from MUMPS to Python?',
   ] : [
-=======
-  const quickPrompts = [
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     'Explain the business rules in this routine',
     'What MUMPS globals are accessed?',
     'Summarise the converted code',
@@ -226,7 +195,6 @@ export default function RightSidebarChat({ isOpen, onClose, onOpen, activeRoutin
         style={{ bottom: '2rem', right: '1.5rem' }}
         className="fixed z-50 group"
       >
-        {/* Outer pulse ring */}
         {!isOpen && (
           <span
             className="absolute inset-0 rounded-full bg-gh-purple opacity-30 animate-ping"
@@ -247,7 +215,6 @@ export default function RightSidebarChat({ isOpen, onClose, onOpen, activeRoutin
             <Sparkles size={22} className="text-white" strokeWidth={1.75} />
           )}
 
-          {/* Unread badge */}
           {!isOpen && unread > 0 && (
             <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gh-red text-white text-[10px] font-bold flex items-center justify-center border-2 border-gh-bg">
               {unread}
@@ -255,7 +222,6 @@ export default function RightSidebarChat({ isOpen, onClose, onOpen, activeRoutin
           )}
         </div>
 
-        {/* Tooltip on hover (only when closed) */}
         {!isOpen && (
           <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 whitespace-nowrap px-2.5 py-1 bg-gh-canvas border border-gh-border text-gh-text text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-panel">
             AI Copilot
@@ -279,13 +245,8 @@ export default function RightSidebarChat({ isOpen, onClose, onOpen, activeRoutin
           <div className="px-4 py-3 border-b border-gh-border flex items-center justify-between shrink-0"
                style={{ background: 'linear-gradient(135deg, #1a1035 0%, #161b22 100%)' }}>
             <div className="flex items-center gap-2.5">
-<<<<<<< HEAD
               <div className="w-8 h-8 rounded-xl overflow-hidden flex items-center justify-center shadow-sm">
                 <img src={logoImg} alt="ErrorX404" className="w-full h-full object-cover" />
-=======
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#a855f7] flex items-center justify-center shadow-sm">
-                <Sparkles size={15} className="text-white" strokeWidth={1.75} />
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
               </div>
               <div>
                 <p className="text-sm font-semibold text-gh-text">AI Copilot</p>
@@ -310,7 +271,6 @@ export default function RightSidebarChat({ isOpen, onClose, onOpen, activeRoutin
               <span className="text-gh-textSubtle">Context:</span>
               <span className="text-gh-accent">{activeRoutine.name}.m</span>
               {conversion && (
-<<<<<<< HEAD
                 <>
                   <span className="ml-auto text-gh-green flex items-center gap-1">
                     <span className="w-1 h-1 rounded-full bg-gh-green" />
@@ -320,12 +280,6 @@ export default function RightSidebarChat({ isOpen, onClose, onOpen, activeRoutin
                     <ShieldCheck size={8} className="text-gh-green" /> evidence-backed
                   </span>
                 </>
-=======
-                <span className="ml-auto text-gh-green flex items-center gap-1">
-                  <span className="w-1 h-1 rounded-full bg-gh-green" />
-                  converted
-                </span>
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
               )}
             </div>
           )}
@@ -340,7 +294,6 @@ export default function RightSidebarChat({ isOpen, onClose, onOpen, activeRoutin
                   </div>
                 )}
                 <div
-<<<<<<< HEAD
                   className={`max-w-[82%] px-3 py-2 rounded-xl text-[11px] leading-relaxed group relative ${
                     m.role === 'user'
                       ? 'bg-gh-accentEmphasis text-white rounded-br-sm'
@@ -355,15 +308,6 @@ export default function RightSidebarChat({ isOpen, onClose, onOpen, activeRoutin
                       <CopyButton text={m.message_text} />
                     </div>
                   )}
-=======
-                  className={`max-w-[82%] px-3 py-2 rounded-xl text-[11px] leading-relaxed ${
-                    m.role === 'user'
-                      ? 'bg-gh-accentEmphasis text-white rounded-br-sm'
-                      : 'bg-gh-surface border border-gh-border text-gh-text rounded-bl-sm whitespace-pre-wrap'
-                  }`}
-                >
-                  {m.message_text}
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
                 </div>
                 {m.role === 'user' && (
                   <div className="w-6 h-6 rounded-lg bg-gh-surface border border-gh-border text-gh-textMuted flex items-center justify-center shrink-0 mt-0.5">
@@ -404,7 +348,6 @@ export default function RightSidebarChat({ isOpen, onClose, onOpen, activeRoutin
           )}
 
           {/* Input */}
-<<<<<<< HEAD
           <form onSubmit={handleSend} className="p-3 border-t border-gh-border bg-gh-bg flex gap-2 shrink-0 items-end">
             <textarea
               ref={inputRef}
@@ -420,25 +363,11 @@ export default function RightSidebarChat({ isOpen, onClose, onOpen, activeRoutin
               rows={1}
               className="flex-1 bg-gh-surface border border-gh-border rounded-xl px-3 py-2 text-xs text-gh-text focus:outline-none focus:border-gh-accent focus:ring-1 focus:ring-gh-accent/20 transition-all placeholder:text-gh-textSubtle resize-none"
               style={{ minHeight: '36px', maxHeight: '120px' }}
-=======
-          <form onSubmit={handleSend} className="p-3 border-t border-gh-border bg-gh-bg flex gap-2 shrink-0">
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputQuestion}
-              onChange={e => setInputQuestion(e.target.value)}
-              placeholder="Ask about this code…"
-              className="flex-1 bg-gh-surface border border-gh-border rounded-xl px-3 py-2 text-xs text-gh-text focus:outline-none focus:border-gh-accent focus:ring-1 focus:ring-gh-accent/20 transition-all placeholder:text-gh-textSubtle"
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
             />
             <button
               type="submit"
               disabled={isLoading || !inputQuestion.trim()}
-<<<<<<< HEAD
               className="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-white transition-all disabled:opacity-40"
-=======
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-white transition-all disabled:opacity-40"
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
               style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)' }}
             >
               <Send size={14} />

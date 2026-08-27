@@ -6,23 +6,17 @@ class RoutineUploadRequest(BaseModel):
     name: str
     raw_code: str
     source_language: str = "MUMPS"
-<<<<<<< HEAD
     relative_path: Optional[str] = None
     workspace_id: Optional[str] = None
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
 class RoutineResponse(BaseModel):
     id: int
     name: str
     source_language: str
     raw_code: str
-<<<<<<< HEAD
     relative_path: Optional[str] = None
     workspace_id: Optional[str] = None
     file_action: Optional[str] = "CONVERT"
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     created_at: datetime
 
     class Config:
@@ -74,14 +68,11 @@ class ConversionResponse(BaseModel):
     target_language: str
     generated_code: str
     model_used: str
-<<<<<<< HEAD
     # Tracks the origin of the generated code:
     # REAL_GEMINI — from the live Gemini API
     # DEMO_FALLBACK — no API key configured, demo output
     # FAILED — conversion failed, error message in generated_code
     conversion_source: Optional[str] = "UNKNOWN"
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     created_at: datetime
 
     class Config:
@@ -98,31 +89,42 @@ class TestCaseResponse(BaseModel):
         from_attributes = True
 
 class VerificationResultSchema(BaseModel):
-    id: int
+    id: Optional[int] = None
     test_case_id: int
-    actual_output: Optional[str]
+    status: Optional[str] = "PASS"
+    expected_output: Optional[str] = None
+    actual_output: Optional[str] = None
     passed: bool
-    mismatch_details: Optional[str]
+    error: Optional[str] = None
+    mismatch_details: Optional[str] = None
+    input_json: Optional[str] = None
+
+    class Config:
+        from_attributes = True
 
 class VerificationResponse(BaseModel):
     conversion_id: int
+    status: Optional[str] = "NOT_VERIFIED"
+    verification_status: Optional[str] = "NOT_VERIFIED"
     total_tests: int
     passed_tests: int
     failed_tests: int
+    error_tests: Optional[int] = 0
+    timeout_tests: Optional[int] = 0
     pass_rate: float
     results: List[VerificationResultSchema]
 
 class ConfidenceScoreResponse(BaseModel):
-    id: int
+    id: Optional[int] = None
     conversion_id: int
     score: float
+    confidence_score: Optional[float] = None
     category: str
+    confidence_category: Optional[str] = None
     reasoning_text: str
-<<<<<<< HEAD
     dependency_preservation_pct: Optional[float] = 100.0
     interface_compatibility_pct: Optional[float] = 100.0
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
+    breakdown: Optional[Dict[str, float]] = None
 
     class Config:
         from_attributes = True
@@ -174,10 +176,9 @@ class ChatMessageResponse(BaseModel):
 
     class Config:
         from_attributes = True
-<<<<<<< HEAD
 
 
-# ─── NEW: Workspace / Project-level schemas ───────────────────────────────────
+# ─── Workspace / Project-level schemas ───────────────────────────────────
 
 class CrossFileEdge(BaseModel):
     source_file: str
@@ -277,7 +278,7 @@ class ProjectManifest(BaseModel):
     accepted: bool
 
 
-# ─── NEW: Human Understanding & NLP Layer Schemas ────────────────────────────
+# ─── Human Understanding & NLP Layer Schemas ────────────────────────────
 
 class InputDetail(BaseModel):
     name: str
@@ -400,5 +401,3 @@ class ChatUnderstandResponse(BaseModel):
     answer: str
     evidence: List[EvidenceItem] = []
     explanation_level: str = "business"
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab

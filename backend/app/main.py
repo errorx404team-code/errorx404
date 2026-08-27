@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import io
 import json
 import time
@@ -13,32 +12,16 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import Base, engine, get_db, ensure_relative_path_column, ensure_workspace_id_column, ensure_new_columns
-=======
-import json
-from typing import List, Optional
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from sqlalchemy.orm import Session
-from datetime import datetime
-
-from app.database import Base, engine, get_db
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 from app import models, schemas
 from app.seed_data import seed_database
 from app.pipeline.analyzer import SpecAnalyzer
 from app.pipeline.dependency_builder import DependencyBuilder
 from app.pipeline.business_partitioner import BusinessPartitioner
-<<<<<<< HEAD
 from app.pipeline.converter import CodeConverter, CONVERSION_SOURCE_REAL, CONVERSION_SOURCE_DEMO, CONVERSION_SOURCE_FAILED
-=======
-from app.pipeline.converter import CodeConverter
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 from app.pipeline.verifier import verifier
 from app.pipeline.scorer import scorer
 from app.pipeline.doc_generator import doc_generator
 from app.pipeline.explainability import explainability_engine
-<<<<<<< HEAD
 from app.pipeline.project_analyzer import project_analyzer
 from app.pipeline.dependency_resolver import dependency_resolver
 from app.pipeline.integration_verifier import integration_verifier
@@ -52,23 +35,12 @@ Base.metadata.create_all(bind=engine)
 ensure_relative_path_column()
 ensure_workspace_id_column()
 ensure_new_columns()
-=======
-from app.llm_provider import llm_provider
-
-# Initialize Database Schema & Seed Data
-Base.metadata.create_all(bind=engine)
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 seed_database()
 
 app = FastAPI(
     title="AI-Powered Legacy Code Modernization Platform API",
-<<<<<<< HEAD
     description="Application-level MUMPS-to-Python Modernization Pipeline with cross-file dependency awareness.",
     version="2.0.0"
-=======
-    description="Real MUMPS-to-Python Modernization Pipeline prioritizing Business Logic Preservation.",
-    version="1.0.0"
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 )
 
 app.add_middleware(
@@ -84,7 +56,6 @@ dep_builder = DependencyBuilder()
 partitioner = BusinessPartitioner()
 converter = CodeConverter()
 
-<<<<<<< HEAD
 
 # ─────────────────────────────────────────────────────────────────────────────
 # EXISTING ENDPOINTS — all preserved, backward compatible
@@ -97,6 +68,7 @@ def read_root():
 
 @app.get("/api/adapters")
 def list_adapters():
+    """Module 9: Multi-Language Support list adapters."""
     return [
         {"language": "MUMPS", "status": "Active", "description": "Healthcare EHR VistA legacy language parser & spec engine"},
         {"language": "COBOL", "status": "Stubbed Interface", "description": "Financial legacy language adapter stub"},
@@ -107,25 +79,10 @@ def list_adapters():
     ]
 
 
-=======
-@app.get("/")
-def read_root():
-    return {"status": "online", "message": "Legacy Code Modernization Platform API operational"}
-
-@app.get("/api/adapters")
-def list_adapters():
-    """Module 9: Multi-Language Support list adapters."""
-    return [
-        {"language": "MUMPS", "status": "Active", "description": "Healthcare EHR VistA legacy language parser & spec engine"},
-        {"language": "COBOL", "status": "Stubbed Interface", "description": "Financial legacy language adapter stub"}
-    ]
-
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 @app.get("/api/routines", response_model=List[schemas.RoutineResponse])
 def get_all_routines(db: Session = Depends(get_db)):
     return db.query(models.Routine).all()
 
-<<<<<<< HEAD
 
 @app.post("/api/routines/upload", response_model=schemas.RoutineResponse)
 def upload_routine(req: schemas.RoutineUploadRequest, db: Session = Depends(get_db)):
@@ -138,24 +95,13 @@ def upload_routine(req: schemas.RoutineUploadRequest, db: Session = Depends(get_
         relative_path=req.relative_path,
         workspace_id=workspace_id,
         file_action=classified["action"],
-=======
-@app.post("/api/routines/upload", response_model=schemas.RoutineResponse)
-def upload_routine(req: schemas.RoutineUploadRequest, db: Session = Depends(get_db)):
-    routine = models.Routine(
-        name=req.name.strip(),
-        raw_code=req.raw_code,
-        source_language=req.source_language
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     )
     db.add(routine)
     db.commit()
     db.refresh(routine)
     return routine
 
-<<<<<<< HEAD
 
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 @app.get("/api/routines/{routine_id}", response_model=schemas.RoutineResponse)
 def get_routine(routine_id: int, db: Session = Depends(get_db)):
     routine = db.query(models.Routine).filter(models.Routine.id == routine_id).first()
@@ -163,7 +109,6 @@ def get_routine(routine_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Routine not found")
     return routine
 
-<<<<<<< HEAD
 
 @app.post("/api/routines/{routine_id}/analyze", response_model=schemas.SpecificationResponse)
 def analyze_routine(routine_id: int, db: Session = Depends(get_db)):
@@ -173,16 +118,10 @@ def analyze_routine(routine_id: int, db: Session = Depends(get_db)):
     - When Gemini API key is configured, real Gemini analysis is REQUIRED.
     - If Gemini fails, HTTP 503 is returned. GeminiAPIError propagates.
     """
-=======
-@app.post("/api/routines/{routine_id}/analyze", response_model=schemas.SpecificationResponse)
-def analyze_routine(routine_id: int, db: Session = Depends(get_db)):
-    """Module 1: Legacy Code Understanding."""
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     routine = db.query(models.Routine).filter(models.Routine.id == routine_id).first()
     if not routine:
         raise HTTPException(status_code=404, detail="Routine not found")
 
-<<<<<<< HEAD
     try:
         result = analyzer.analyze_routine(routine.raw_code, routine.source_language)
     except GeminiAPIError as e:
@@ -195,10 +134,6 @@ def analyze_routine(routine_id: int, db: Session = Depends(get_db)):
             }
         )
 
-=======
-    result = analyzer.analyze_routine(routine.raw_code, routine.source_language)
-    
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     spec = models.Specification(
         routine_id=routine.id,
         spec_json=result["spec_json"],
@@ -210,10 +145,7 @@ def analyze_routine(routine_id: int, db: Session = Depends(get_db)):
     db.refresh(spec)
     return spec
 
-<<<<<<< HEAD
 
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 @app.post("/api/routines/{routine_id}/dependency-graph", response_model=schemas.DependencyGraphResponse)
 def get_dependency_graph(routine_id: int, db: Session = Depends(get_db)):
     """Module 1b: Dependency Graph Generator."""
@@ -221,16 +153,10 @@ def get_dependency_graph(routine_id: int, db: Session = Depends(get_db)):
     if not routine:
         raise HTTPException(status_code=404, detail="Routine not found")
 
-<<<<<<< HEAD
     graph_res = dep_builder.build_graph(
         routine.raw_code, routine.name, routine.source_language or "MUMPS"
     )
 
-=======
-    graph_res = dep_builder.build_graph(routine.raw_code, routine.name)
-    
-    # Store in DB table
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     db.query(models.DependencyGraphNode).filter(models.DependencyGraphNode.routine_id == routine_id).delete()
     for node in graph_res["nodes"]:
         dep_node = models.DependencyGraphNode(
@@ -238,12 +164,8 @@ def get_dependency_graph(routine_id: int, db: Session = Depends(get_db)):
             node_id=node["id"],
             node_type=node["type"],
             related_node_id=None,
-<<<<<<< HEAD
             dependency_type="member",
             source_file=routine.relative_path or routine.name + ".m",
-=======
-            dependency_type="member"
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         )
         db.add(dep_node)
     db.commit()
@@ -254,16 +176,10 @@ def get_dependency_graph(routine_id: int, db: Session = Depends(get_db)):
         "edges": graph_res["edges"]
     }
 
-<<<<<<< HEAD
 
 @app.post("/api/routines/{routine_id}/business-logic-map", response_model=schemas.BusinessLogicMapResponse)
 def get_business_logic_map(routine_id: int, db: Session = Depends(get_db)):
-    """Module 1c: Business Logic Partitioning."""
-=======
-@app.post("/api/routines/{routine_id}/business-logic-map", response_model=schemas.BusinessLogicMapResponse)
-def get_business_logic_map(routine_id: int, db: Session = Depends(get_db)):
     """Module 1c: Business Logic Partitioning (Mono2Micro-inspired)."""
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     routine = db.query(models.Routine).filter(models.Routine.id == routine_id).first()
     if not routine:
         raise HTTPException(status_code=404, detail="Routine not found")
@@ -273,10 +189,7 @@ def get_business_logic_map(routine_id: int, db: Session = Depends(get_db)):
 
     res = partitioner.partition_routine(routine.raw_code, spec_json_str)
 
-<<<<<<< HEAD
-=======
     # Save to database
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     db.query(models.BusinessLogicPartition).filter(models.BusinessLogicPartition.routine_id == routine_id).delete()
     for p in res["partitions"]:
         part_row = models.BusinessLogicPartition(
@@ -295,7 +208,6 @@ def get_business_logic_map(routine_id: int, db: Session = Depends(get_db)):
         "overall_cohesion": res["overall_cohesion"]
     }
 
-<<<<<<< HEAD
 
 @app.post("/api/routines/{routine_id}/convert", response_model=schemas.ConversionResponse)
 def convert_routine(routine_id: int, req: schemas.ConversionRequest, db: Session = Depends(get_db)):
@@ -308,18 +220,12 @@ def convert_routine(routine_id: int, req: schemas.ConversionRequest, db: Session
     - If Gemini fails, HTTP 503 is returned — no fake code is generated or stored.
     - conversion_source is tracked: REAL_GEMINI | DEMO_FALLBACK | FAILED
     """
-=======
-@app.post("/api/routines/{routine_id}/convert", response_model=schemas.ConversionResponse)
-def convert_routine(routine_id: int, req: schemas.ConversionRequest, db: Session = Depends(get_db)):
-    """Module 2: AI-Powered Code Transformation."""
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     routine = db.query(models.Routine).filter(models.Routine.id == routine_id).first()
     if not routine:
         raise HTTPException(status_code=404, detail="Routine not found")
 
     latest_spec = db.query(models.Specification).filter(models.Specification.routine_id == routine_id).order_by(models.Specification.id.desc()).first()
     if not latest_spec:
-<<<<<<< HEAD
         try:
             latest_spec = analyze_routine(routine_id, db)
         except GeminiAPIError as e:
@@ -443,38 +349,21 @@ def convert_routine(routine_id: int, req: schemas.ConversionRequest, db: Session
             )
 
     src_file = routine.relative_path or routine.name + ".m"
-=======
-        # Run analyze first if spec doesn't exist yet
-        latest_spec = analyze_routine(routine_id, db)
-
-    generated_code = converter.convert_code(
-        latest_spec.spec_json,
-        latest_spec.business_rules_json,
-        req.target_language
-    )
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
     conversion = models.Conversion(
         routine_id=routine.id,
         target_language=req.target_language,
         generated_code=generated_code,
-<<<<<<< HEAD
         model_used=llm_provider.last_model_used,
         traceability_header=f"# Modernized from: {src_file}",
         conversion_source=conversion_source,
-=======
-        model_used="gemini-2.0-flash"
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     )
     db.add(conversion)
     db.commit()
     db.refresh(conversion)
     return conversion
 
-<<<<<<< HEAD
 
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 @app.post("/api/conversions/{conversion_id}/verify", response_model=schemas.VerificationResponse)
 def verify_conversion(conversion_id: int, db: Session = Depends(get_db)):
     """Module 3: Independent Verification Layer."""
@@ -483,7 +372,6 @@ def verify_conversion(conversion_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Conversion not found")
 
     test_cases = db.query(models.TestCase).filter(models.TestCase.routine_id == conversion.routine_id).all()
-<<<<<<< HEAD
     if not test_cases:
         routine = db.query(models.Routine).filter(models.Routine.id == conversion.routine_id).first()
         if routine:
@@ -533,8 +421,7 @@ Example:
                         db.add(tc)
                     db.commit()
             except GeminiAPIError:
-                # Test generation failed due to Gemini API error — proceed with
-                # fallback test cases (verification continues but notes AI test gen failed)
+                # Test generation failed due to Gemini API error — proceed with fallback test cases
                 pass
             except Exception:
                 pass
@@ -567,8 +454,6 @@ Example:
         db.commit()
         test_cases = [t1, t2, t3]
 
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     tc_dicts = [
         {
             "id": tc.id,
@@ -579,30 +464,15 @@ Example:
         for tc in test_cases
     ]
 
-<<<<<<< HEAD
     ver_summary = verifier.verify_conversion(conversion.generated_code, tc_dicts)
 
-=======
-    if not tc_dicts:
-        # Default test vector
-        tc_dicts = [{
-            "id": 1,
-            "input_json": json.dumps({"dfn": "10001", "weight_kg": 70}),
-            "expected_output": "VERIFIED",
-            "source": "reference_verified"
-        }]
-
-    ver_summary = verifier.verify_conversion(conversion.generated_code, tc_dicts)
-
-    # Store verification results in DB
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     db.query(models.VerificationResult).filter(models.VerificationResult.conversion_id == conversion_id).delete()
     result_schemas = []
     for r in ver_summary["results"]:
         db_res = models.VerificationResult(
             conversion_id=conversion_id,
             test_case_id=r["test_case_id"],
-            actual_output=str(r["actual_output"]),
+            actual_output=str(r["actual_output"]) if r["actual_output"] is not None else "",
             passed=r["passed"],
             mismatch_details=r["mismatch_details"]
         )
@@ -613,63 +483,67 @@ Example:
         result_schemas.append(schemas.VerificationResultSchema(
             id=db_res.id,
             test_case_id=db_res.test_case_id,
+            status=r.get("status", "PASS" if db_res.passed else "FAIL"),
+            expected_output=r.get("expected_output"),
             actual_output=db_res.actual_output,
             passed=db_res.passed,
-            mismatch_details=db_res.mismatch_details
+            error=r.get("error"),
+            mismatch_details=db_res.mismatch_details,
+            input_json=r.get("input_json")
         ))
 
-<<<<<<< HEAD
-    # Calculate and store Confidence Score
-=======
     # Calculate and store Confidence Score (Module 4)
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     score_res = scorer.calculate_score(ver_summary, conversion.generated_code)
     db.query(models.ConfidenceScore).filter(models.ConfidenceScore.conversion_id == conversion_id).delete()
     db_score = models.ConfidenceScore(
         conversion_id=conversion_id,
         score=score_res["score"],
         category=score_res["category"],
-<<<<<<< HEAD
         reasoning_text=score_res["reasoning_text"],
         dependency_preservation_pct=score_res.get("dependency_preservation_pct", 100.0),
         interface_compatibility_pct=score_res.get("interface_compatibility_pct", 100.0),
-=======
-        reasoning_text=score_res["reasoning_text"]
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     )
     db.add(db_score)
     db.commit()
 
     return {
         "conversion_id": conversion_id,
+        "status": ver_summary.get("status", "NOT_VERIFIED"),
+        "verification_status": ver_summary.get("verification_status", "NOT_VERIFIED"),
         "total_tests": ver_summary["total_tests"],
         "passed_tests": ver_summary["passed_tests"],
         "failed_tests": ver_summary["failed_tests"],
+        "error_tests": ver_summary.get("error_tests", 0),
+        "timeout_tests": ver_summary.get("timeout_tests", 0),
         "pass_rate": ver_summary["pass_rate"],
         "results": result_schemas
     }
 
-<<<<<<< HEAD
 
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 @app.get("/api/conversions/{conversion_id}/score", response_model=schemas.ConfidenceScoreResponse)
 def get_confidence_score(conversion_id: int, db: Session = Depends(get_db)):
     """Module 4: Confidence & Hallucination Score."""
     score_row = db.query(models.ConfidenceScore).filter(models.ConfidenceScore.conversion_id == conversion_id).first()
     if not score_row:
-<<<<<<< HEAD
-=======
         # Trigger verification if not evaluated yet
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         verify_conversion(conversion_id, db)
         score_row = db.query(models.ConfidenceScore).filter(models.ConfidenceScore.conversion_id == conversion_id).first()
+    
+    if score_row:
+        return {
+            "id": score_row.id,
+            "conversion_id": score_row.conversion_id,
+            "score": score_row.score,
+            "confidence_score": score_row.score,
+            "category": score_row.category,
+            "confidence_category": score_row.category,
+            "reasoning_text": score_row.reasoning_text,
+            "dependency_preservation_pct": score_row.dependency_preservation_pct,
+            "interface_compatibility_pct": score_row.interface_compatibility_pct,
+        }
     return score_row
 
-<<<<<<< HEAD
 
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 @app.post("/api/conversions/{conversion_id}/review", response_model=schemas.ReviewDecisionResponse)
 def submit_review_decision(conversion_id: int, req: schemas.ReviewRequest, db: Session = Depends(get_db)):
     """Module 5: Human-in-the-Loop Review."""
@@ -688,17 +562,13 @@ def submit_review_decision(conversion_id: int, req: schemas.ReviewRequest, db: S
     db.refresh(decision)
     return decision
 
-<<<<<<< HEAD
 
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 @app.post("/api/conversions/{conversion_id}/rollback", response_model=schemas.ReviewDecisionResponse)
 def rollback_conversion(conversion_id: int, db: Session = Depends(get_db)):
     """Module 8: Rollback / Safety Mode."""
     req = schemas.ReviewRequest(decision="reverted", reviewer_notes="Conversion rolled back to original legacy routine.")
     return submit_review_decision(conversion_id, req, db)
 
-<<<<<<< HEAD
 
 @app.post("/api/conversions/{conversion_id}/run")
 def run_conversion(conversion_id: int, db: Session = Depends(get_db)):
@@ -757,8 +627,6 @@ def invalidate_conversion(conversion_id: int, db: Session = Depends(get_db)):
     return {"conversion_id": conversion_id, "invalidated": True}
 
 
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 @app.get("/api/conversions/{conversion_id}/docs", response_model=schemas.DocumentationResponse)
 def get_documentation(conversion_id: int, db: Session = Depends(get_db)):
     """Module 6: Documentation Auto-Generator."""
@@ -779,10 +647,7 @@ def get_documentation(conversion_id: int, db: Session = Depends(get_db)):
         "markdown_docs": markdown_docs
     }
 
-<<<<<<< HEAD
 
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 @app.get("/api/conversions/{conversion_id}/explain", response_model=schemas.ExplainabilityResponse)
 def get_explainability_trace(conversion_id: int, db: Session = Depends(get_db)):
     """Module 10: Explainability Panel."""
@@ -804,16 +669,8 @@ def get_explainability_trace(conversion_id: int, db: Session = Depends(get_db)):
     }
 
     trace = explainability_engine.generate_explainability_trace(spec_json_str, ver_dicts, score_data)
-<<<<<<< HEAD
     return {"conversion_id": conversion_id, "reasoning_trace": trace}
 
-=======
-
-    return {
-        "conversion_id": conversion_id,
-        "reasoning_trace": trace
-    }
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
 @app.get("/api/dashboard/summary", response_model=schemas.DashboardSummaryResponse)
 def get_dashboard_summary(db: Session = Depends(get_db)):
@@ -842,7 +699,6 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         "business_logic_coverage_pct": 100.0
     }
 
-<<<<<<< HEAD
 
 @app.post("/api/chat/ask", response_model=schemas.ChatMessageResponse)
 def ask_chatbot(req: schemas.ChatAskRequest, db: Session = Depends(get_db)):
@@ -1028,9 +884,6 @@ dependency graph, or verification results shown above. If you cannot trace it, s
             )
         )
     except GeminiAPIError as e:
-        # Gemini API configured but unavailable — return transparent error message
-        # in the same format as a normal chat response (not an HTTP error)
-        # so the UI can show it without breaking the chat flow.
         answer_text = (
             f"AI response unavailable. The Gemini API service returned an error ({e.error_category}). "
             "No fake or fabricated answer was generated. "
@@ -1047,33 +900,6 @@ dependency graph, or verification results shown above. If you cannot trace it, s
                 "To enable AI answers, go to Settings and enter your Gemini API key."
             )
 
-=======
-@app.post("/api/chat/ask", response_model=schemas.ChatMessageResponse)
-def ask_chatbot(req: schemas.ChatAskRequest, db: Session = Depends(get_db)):
-    """Module 11: AI Chatbot for doubt clearance with routine code context."""
-    context_text = ""
-    if req.routine_id:
-        routine = db.query(models.Routine).filter(models.Routine.id == req.routine_id).first()
-        if routine:
-            context_text += f"\nACTIVE ROUTINE NAME: {routine.name}\nRAW MUMPS CODE:\n{routine.raw_code}\n"
-            latest_conversion = db.query(models.Conversion).filter(models.Conversion.routine_id == routine.id).order_by(models.Conversion.id.desc()).first()
-            if latest_conversion:
-                context_text += f"\nGENERATED TARGET CODE ({latest_conversion.target_language}):\n{latest_conversion.generated_code}\n"
-
-    prompt = f"""
-{context_text}
-USER QUESTION: {req.question}
-
-Please provide a clear, helpful, expert answer explaining MUMPS commands, business logic preservation, confidence scores, or conversion details based on the above code context.
-"""
-
-    answer_text = llm_provider.generate_completion(
-        prompt,
-        system_instruction="You are an expert AI modernization assistant integrated inside a VS Code dark IDE sidebar. Be concise, precise, and practical."
-    )
-
-    # Save messages
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     user_msg = models.ChatMessage(
         session_id=req.session_id or "default",
         role="user",
@@ -1091,7 +917,6 @@ Please provide a clear, helpful, expert answer explaining MUMPS commands, busine
     db.add(assistant_msg)
     db.commit()
     db.refresh(assistant_msg)
-<<<<<<< HEAD
     return assistant_msg
 
 
@@ -1278,25 +1103,21 @@ def ask_human_understanding(
 
 
 # ── Settings ──────────────────────────────────────────────────────────────────
-=======
-
-    return assistant_msg
-
-# ==================== API Key Settings Endpoints ====================
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
 class ApiKeyRequest(BaseModel):
     api_key: str
 
-<<<<<<< HEAD
 
 @app.post("/api/settings/test-api-key")
 def test_api_key(req: ApiKeyRequest):
-    return llm_provider.test_connection(api_key=req.api_key)
+    """Test if a Gemini API key is valid."""
+    result = llm_provider.test_connection(api_key=req.api_key)
+    return result
 
 
 @app.post("/api/settings/api-key")
 def set_api_key(req: ApiKeyRequest):
+    """Save and activate a Gemini API key."""
     llm_provider.persist_api_key(req.api_key)
     result = llm_provider.test_connection()
     return {"saved": True, "test_result": result}
@@ -1304,27 +1125,7 @@ def set_api_key(req: ApiKeyRequest):
 
 @app.get("/api/settings/api-key-status")
 def get_api_key_status():
-=======
-@app.post("/api/settings/test-api-key")
-def test_api_key(req: ApiKeyRequest):
-    """Test if a Gemini API key is valid."""
-    result = llm_provider.test_connection(api_key=req.api_key)
-    return result
-
-@app.post("/api/settings/api-key")
-def set_api_key(req: ApiKeyRequest):
-    """Save and activate a Gemini API key."""
-    llm_provider.persist_api_key(req.api_key)
-    result = llm_provider.test_connection()
-    return {
-        "saved": True,
-        "test_result": result
-    }
-
-@app.get("/api/settings/api-key-status")
-def get_api_key_status():
     """Check if an API key is currently configured."""
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     key = llm_provider.api_key
     has_key = bool(key and key != "your_gemini_api_key_here")
     return {
@@ -1332,12 +1133,12 @@ def get_api_key_status():
         "key_preview": f"{key[:8]}...{key[-4:]}" if has_key and len(key) > 12 else ("***" if has_key else ""),
     }
 
-<<<<<<< HEAD
 
 # ── File Upload ───────────────────────────────────────────────────────────────
 
 @app.post("/api/routines/upload-files", response_model=List[schemas.RoutineResponse])
 def upload_files(files: List[schemas.RoutineUploadRequest], db: Session = Depends(get_db)):
+    """Upload multiple routines at once (from file/folder picker)."""
     workspace_id = None
     for f in files:
         if f.workspace_id:
@@ -1359,19 +1160,6 @@ def upload_files(files: List[schemas.RoutineUploadRequest], db: Session = Depend
             relative_path=file_req.relative_path,
             workspace_id=workspace_id,
             file_action=classified["action"],
-=======
-# ==================== File Upload Endpoint ====================
-
-@app.post("/api/routines/upload-files")
-def upload_files(files: List[schemas.RoutineUploadRequest], db: Session = Depends(get_db)):
-    """Upload multiple routines at once (from file/folder picker)."""
-    created = []
-    for file_req in files:
-        routine = models.Routine(
-            name=file_req.name.strip(),
-            raw_code=file_req.raw_code,
-            source_language=file_req.source_language
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         )
         db.add(routine)
         db.commit()
@@ -1379,7 +1167,6 @@ def upload_files(files: List[schemas.RoutineUploadRequest], db: Session = Depend
         created.append(routine)
     return created
 
-<<<<<<< HEAD
 
 # ─────────────────────────────────────────────────────────────────────────────
 # NEW: WORKSPACE / PROJECT-LEVEL ENDPOINTS
@@ -1933,6 +1720,7 @@ def _generate_readme(
     ]
     return "\n".join(lines)
 
+
 @app.get("/api/routines/{routine_id}/migration-report")
 def get_migration_report(routine_id: int, db: Session = Depends(get_db)):
     routine = db.query(models.Routine).filter(models.Routine.id == routine_id).first()
@@ -1956,8 +1744,18 @@ def get_migration_report(routine_id: int, db: Session = Depends(get_db)):
     total_tests = len(test_cases)
     passed_tests = sum(1 for v in verifications if v.passed)
     failed_tests = len(verifications) - passed_tests
-    pass_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
-    
+    pass_rate = round((passed_tests / total_tests * 100), 2) if total_tests > 0 else 0.0
+
+    if conversion and verifications:
+        if total_tests > 0 and passed_tests == total_tests:
+            ver_status = "VERIFIED"
+        elif failed_tests > 0:
+            ver_status = "FAILED"
+        else:
+            ver_status = "NOT_VERIFIED"
+    else:
+        ver_status = "Not Available"
+
     return {
         "before": {
             "name": routine.name,
@@ -1990,15 +1788,13 @@ def get_migration_report(routine_id: int, db: Session = Depends(get_db)):
             "mismatch_details": [v.mismatch_details for v in verifications if not v.passed],
             "confidence_score": score.score if score else "Not Available",
             "confidence_category": score.category if score else "Not Available",
-            "verification_status": "Verified" if verifications else "Not Available"
+            "verification_status": ver_status
         },
         "decision": {
             "confidence_score": score.score if score else "Not Available",
-            "verification_result": "Passed" if passed_tests == total_tests and total_tests > 0 else "Failed" if verifications else "Not Available",
+            "verification_result": ver_status,
             "review_status": review.decision if review else "Pending",
             "reviewer_notes": review.reviewer_notes if review else "None",
             "final_status": review.decision if review else "Pending"
         }
     }
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab

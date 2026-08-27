@@ -77,13 +77,13 @@ export default function MigrationReportModal({ routineId, onClose }) {
         <div className="grid grid-cols-4 gap-4 p-4 border-b border-gh-border bg-gh-bg">
             <div className="bg-gh-surface rounded-lg p-3 border border-gh-border">
                 <p className="text-[10px] text-gh-textMuted uppercase font-semibold">Confidence</p>
-                <p className={`text-lg font-bold mt-1 ${report.validation.confidence_score >= 85 ? 'text-gh-green' : report.validation.confidence_score >= 50 ? 'text-gh-yellow' : 'text-gh-red'}`}>
+                <p className={`text-lg font-bold mt-1 ${report.validation.confidence_score !== "Not Available" && report.validation.confidence_score >= 75 ? 'text-gh-green' : report.validation.confidence_score !== "Not Available" && report.validation.confidence_score >= 60 ? 'text-gh-yellow' : 'text-gh-red'}`}>
                     {report.validation.confidence_score !== "Not Available" ? `${Number(report.validation.confidence_score).toFixed(1)}%` : 'N/A'}
                 </p>
             </div>
             <div className="bg-gh-surface rounded-lg p-3 border border-gh-border">
                 <p className="text-[10px] text-gh-textMuted uppercase font-semibold">Validation</p>
-                <p className={`text-lg font-bold mt-1 ${report.validation.pass_rate === 100 ? 'text-gh-green' : report.validation.pass_rate > 0 ? 'text-gh-yellow' : 'text-gh-textMuted'}`}>
+                <p className={`text-lg font-bold mt-1 ${report.validation.verification_status === 'VERIFIED' || report.validation.pass_rate === 100 ? 'text-gh-green' : report.validation.pass_rate > 0 ? 'text-gh-yellow' : 'text-gh-red'}`}>
                     {report.validation.passed_tests} / {report.validation.total_tests} Passed
                 </p>
             </div>
@@ -120,29 +120,29 @@ export default function MigrationReportModal({ routineId, onClose }) {
               <div className="bg-gh-surface p-3 rounded border border-gh-border max-h-32 overflow-y-auto">
                 <p className="text-gh-textMuted mb-1 font-semibold">Dependencies</p>
                 {Array.isArray(report.before.dependencies) ? (
-                  <ul className="list-disc pl-4 text-gh-text space-y-1">
-                    {report.before.dependencies.map((d, i) => <li key={i}>{d.id} <span className="text-gh-textSubtle">({d.type})</span></li>)}
-                  </ul>
-                ) : <p>{report.before.dependencies}</p>}
+                    <ul className="space-y-0.5 font-mono text-[11px]">
+                        {report.before.dependencies.map((d, i) => (
+                            <li key={i} className="text-gh-textSubtle">• {d.id} <span className="text-gh-textMuted">({d.type})</span></li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="text-gh-textMuted italic">No static dependencies mapped</p>
+                )}
               </div>
-            </div>
-            <div className="mt-4 bg-gh-surface p-3 rounded border border-gh-border">
-                <p className="text-gh-textMuted mb-1 font-semibold">Specifications / Business Rules</p>
-                <p className="text-gh-text text-xs whitespace-pre-wrap mt-2">{report.before.spec_readable_text}</p>
             </div>
           </section>
 
-          {/* 2. MIGRATION */}
+          {/* 2. SPECIFICATION */}
           <section>
             <h3 className="text-sm font-bold text-gh-text border-b border-gh-border pb-2 mb-3 flex items-center gap-2">
               <span className="w-5 h-5 rounded-full bg-gh-surface2 border border-gh-border flex items-center justify-center text-xs">2</span>
-              MIGRATION PIPELINE
+              SPECIFICATION (Extracted Rules)
             </h3>
-            <div className="bg-gh-surface p-3 rounded border border-gh-border text-xs text-gh-text flex flex-col gap-2">
-                <p><span className="text-gh-textMuted w-32 inline-block">Process Status:</span> {report.migration.status}</p>
-                <p><span className="text-gh-textMuted w-32 inline-block">Conversion Path:</span> {report.migration.source_language} → {report.migration.target_language}</p>
-                <p><span className="text-gh-textMuted w-32 inline-block">Model:</span> {report.migration.model_used}</p>
-                <p><span className="text-gh-textMuted w-32 inline-block">Business Rules:</span> {report.migration.preserved_business_rules}</p>
+            <div className="bg-gh-surface p-3 rounded border border-gh-border text-xs text-gh-text space-y-2">
+                <p className="font-semibold text-gh-textMuted">Business Rules Ground Truth</p>
+                <div className="font-mono bg-gh-bg p-2 rounded border border-gh-border text-gh-textSubtle max-h-28 overflow-y-auto whitespace-pre-wrap">
+                    {report.before.spec_readable_text || "No spec text available"}
+                </div>
             </div>
           </section>
 
@@ -150,13 +150,18 @@ export default function MigrationReportModal({ routineId, onClose }) {
           <section>
             <h3 className="text-sm font-bold text-gh-text border-b border-gh-border pb-2 mb-3 flex items-center gap-2">
               <span className="w-5 h-5 rounded-full bg-gh-surface2 border border-gh-border flex items-center justify-center text-xs">3</span>
-              AFTER (Modernized State)
+              AFTER (Target {report.after.target_language})
             </h3>
-            <div className="bg-gh-surface p-3 rounded border border-gh-border text-xs text-gh-text flex flex-col gap-2">
-                <p><span className="text-gh-textMuted w-32 inline-block">Target Language:</span> {report.after.target_language}</p>
-                <div className="mt-2">
-                    <p className="text-gh-textMuted mb-1 font-semibold">Generated Traceability Header</p>
-                    <pre className="p-2 bg-gh-bg border border-gh-border rounded text-[10px] font-mono text-gh-textSubtle overflow-x-auto whitespace-pre-wrap max-h-40">
+            <div className="bg-gh-surface p-3 rounded border border-gh-border text-xs text-gh-text space-y-3">
+                <div>
+                    <p className="font-semibold text-gh-textMuted mb-1">Modernized Code Preview</p>
+                    <pre className="font-mono bg-gh-bg p-2.5 rounded border border-gh-border text-gh-text max-h-40 overflow-y-auto overflow-x-auto text-[11px]">
+                        {report.after.generated_code || "No code generated yet."}
+                    </pre>
+                </div>
+                <div>
+                    <p className="font-semibold text-gh-textMuted mb-1">Traceability Metadata</p>
+                    <pre className="font-mono bg-gh-bg p-2 rounded border border-gh-border text-gh-accent text-[11px]">
                         {report.after.traceability_header || "No traceability header generated."}
                     </pre>
                 </div>
@@ -172,13 +177,14 @@ export default function MigrationReportModal({ routineId, onClose }) {
             <div className="bg-gh-surface p-3 rounded border border-gh-border text-xs text-gh-text flex flex-col gap-3">
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <p><span className="text-gh-textMuted inline-block w-32">Status:</span> {report.validation.verification_status}</p>
+                        <p><span className="text-gh-textMuted inline-block w-32">Status:</span> <span className={`font-semibold ${report.validation.verification_status === 'VERIFIED' ? 'text-gh-green' : report.validation.verification_status === 'FAILED' ? 'text-gh-red' : 'text-gh-yellow'}`}>{report.validation.verification_status}</span></p>
                         <p><span className="text-gh-textMuted inline-block w-32">Total Tests:</span> {report.validation.total_tests}</p>
                         <p><span className="text-gh-textMuted inline-block w-32">Passed / Failed:</span> {report.validation.passed_tests} / {report.validation.failed_tests}</p>
+                        <p><span className="text-gh-textMuted inline-block w-32">Pass Rate:</span> {report.validation.pass_rate}%</p>
                     </div>
                     <div>
-                        <p><span className="text-gh-textMuted inline-block w-32">Confidence Score:</span> {report.validation.confidence_score !== 'Not Available' ? Number(report.validation.confidence_score).toFixed(1) : 'N/A'}</p>
-                        <p><span className="text-gh-textMuted inline-block w-32">Category:</span> <span className="capitalize">{report.validation.confidence_category}</span></p>
+                        <p><span className="text-gh-textMuted inline-block w-32">Confidence Score:</span> {report.validation.confidence_score !== 'Not Available' ? `${Number(report.validation.confidence_score).toFixed(1)}%` : 'N/A'}</p>
+                        <p><span className="text-gh-textMuted inline-block w-32">Category:</span> <span className="capitalize font-medium">{report.validation.confidence_category}</span></p>
                     </div>
                 </div>
                 {report.validation.failed_tests > 0 && report.validation.mismatch_details && report.validation.mismatch_details.length > 0 && (

@@ -306,8 +306,15 @@ def build_cross_file_dependency_signals(routines: List[Dict]) -> List[Dict]:
     """
     cross_edges = []
 
-    # Build a lookup: symbol name → routine name
-    symbol_to_routine = {}
+    # Build a lookup: routine name -> routine info
+    # In MUMPS, files define routines. A routine's name is the primary compilation unit.
+    routine_name_to_info = {}
+    for r in routines:
+        name = r.get("name", "")
+        rel = r.get("relative_path", name)
+        routine_name_to_info[name.upper()] = {"routine_name": name, "relative_path": rel}
+
+    # Now scan each file for calls to external routines
     for r in routines:
         lang = r.get("source_language", "Unknown")
         code = r.get("raw_code", "")
@@ -315,64 +322,47 @@ def build_cross_file_dependency_signals(routines: List[Dict]) -> List[Dict]:
         rel = r.get("relative_path", name)
 
         if lang == "MUMPS":
-            # Tags defined in this file
-            for m in re.finditer(r'^([A-Z0-9%]+)\s*(?:\(|[\s])', code, re.MULTILINE):
-                tag = m.group(1)
-                symbol_to_routine[tag] = {"routine_name": name, "relative_path": rel}
-            symbol_to_routine[name] = {"routine_name": name, "relative_path": rel}
-
-        elif lang == "Python":
-            for m in re.finditer(r'^(?:def|class)\s+(\w+)', code, re.MULTILINE):
-                sym = m.group(1)
-                symbol_to_routine[sym] = {"routine_name": name, "relative_path": rel}
-
-        elif lang == "SQL":
-            for m in re.finditer(r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)', code, re.IGNORECASE):
-                sym = m.group(1)
-                symbol_to_routine[sym] = {"routine_name": name, "relative_path": rel}
-
-    # Now scan each file for calls to symbols defined in other files
-    for r in routines:
-        lang = r.get("source_language", "Unknown")
-        code = r.get("raw_code", "")
-        name = r.get("name", "")
-        rel = r.get("relative_path", name)
-
-        if lang == "MUMPS":
-            # External routine calls: DO ^ROUTINE or DO TAG^ROUTINE
-            for m in re.finditer(r'(?:D|DO)\s+(?:(\w+)\^)?(\w+)', code, re.IGNORECASE):
+            # In MUMPS:
+            # - A call is ONLY an external routine call if it explicitly specifies a routine name with '^',
+            #   such as DO ^ROUTINE, DO TAG^ROUTINE, GOTO ^ROUTINE, GOTO TAG^ROUTINE, $$TAG^ROUTINE, $$^ROUTINE.
+            # - Calls WITHOUT '^' (e.g. DO CHECKAGE, D CHECKAGE, GOTO LABEL, $$CALC) are local subroutine calls
+            #   within the SAME file. They must NEVER generate cross-file dependency edges or external imports.
+            # - Calls targeting the routine itself (e.g. DO TAG^PATIENT inside PATIENT.m) are local.
+            for m in re.finditer(r'(?:(?:D|DO|G|GOTO)\s+|\$\$)(?:([A-Z0-9%]+)\s*\^|\^)([A-Z0-9%]+)', code, re.IGNORECASE):
                 tag_call = m.group(1)
-                rtn_call = m.group(2)
-                # Check if rtn_call matches a known routine name
-                if rtn_call in symbol_to_routine:
-                    info = symbol_to_routine[rtn_call]
-                    if info["routine_name"] != name:
-                        cross_edges.append({
-                            "source_file": rel or name + ".m",
-                            "target_file": info["relative_path"] or info["routine_name"] + ".m",
-                            "source_symbol": name,
-                            "target_symbol": tag_call or rtn_call,
-                            "dependency_type": "CALLS",
-                            "confidence": 0.9,
-                            "source_routine_name": name,
-                            "target_routine_name": info["routine_name"],
-                        })
-                # Tag call within potential cross-file: TAG^ROUTINE pattern
-                if tag_call and rtn_call != name:
-                    # Even if not in symbol map, record as potential cross-file call
+                rtn_call = m.group(2).upper() if m.group(2) else ""
+
+                if not rtn_call or rtn_call == name.upper():
+                    continue
+
+                # Cross-file dependency exists only if explicitly referencing an external routine with '^'
+                if rtn_call in routine_name_to_info:
+                    info = routine_name_to_info[rtn_call]
+                    cross_edges.append({
+                        "source_file": rel or name + ".m",
+                        "target_file": info["relative_path"] or info["routine_name"] + ".m",
+                        "source_symbol": name,
+                        "target_symbol": tag_call or rtn_call,
+                        "dependency_type": "CALLS",
+                        "confidence": 0.95,
+                        "source_routine_name": name,
+                        "target_routine_name": info["routine_name"],
+                    })
+                else:
+                    # External routine outside workspace
                     cross_edges.append({
                         "source_file": rel or name + ".m",
                         "target_file": rtn_call + ".m",
                         "source_symbol": name,
-                        "target_symbol": tag_call,
+                        "target_symbol": tag_call or rtn_call,
                         "dependency_type": "CALLS",
-                        "confidence": 0.75,
+                        "confidence": 0.8,
                         "source_routine_name": name,
                         "target_routine_name": rtn_call,
                     })
 
             # Global variable sharing: if multiple files access same global
-            for m in re.finditer(r'\^([A-Z0-9%]+)', code):
+            for m in re.finditer(r'(?<!\^)(?<!\bDO\s)(?<!\bD\s)(?<!\bGOTO\s)(?<!\bG\s)(?<!\$\$)\^([A-Z0-9%]+)', code, re.IGNORECASE):
                 global_name = "^" + m.group(1).split("(")[0]
                 for other in routines:
                     if other["name"] == name:
@@ -388,15 +378,14 @@ def build_cross_file_dependency_signals(routines: List[Dict]) -> List[Dict]:
                             "source_routine_name": name,
                             "target_routine_name": other["name"],
                         })
-            break  # avoid quadratic - global sharing detected once per file
 
         elif lang == "Python":
             # from module import X — check if module matches a known routine
             for m in re.finditer(r'from\s+([\w.]+)\s+import\s+([\w,\s*]+)', code, re.MULTILINE):
-                mod = m.group(1).split(".")[-1]
+                mod = m.group(1).split(".")[-1].upper()
                 sym = m.group(2).strip()
-                if mod in symbol_to_routine:
-                    info = symbol_to_routine[mod]
+                if mod in routine_name_to_info:
+                    info = routine_name_to_info[mod]
                     if info["routine_name"] != name:
                         cross_edges.append({
                             "source_file": rel or name + ".py",

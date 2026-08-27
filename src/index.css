@@ -159,8 +159,6 @@ body {
   font-weight: 600;
   letter-spacing: 0.3px;
 }
-<<<<<<< HEAD
-
 /* Landing Page Logo Animations */
 @keyframes logoFloat {
   0%, 100% {
@@ -189,5 +187,3 @@ body {
 .animate-logo-pulse {
   animation: logoPulseGlow 3.5s ease-in-out infinite;
 }
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab

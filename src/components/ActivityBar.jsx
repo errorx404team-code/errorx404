@@ -1,10 +1,6 @@
 import React from 'react';
-<<<<<<< HEAD
 import { Files, Network, LayoutDashboard, Settings, Layers } from 'lucide-react';
 import logoImg from '../assets/temp_image_1786523047062.jpeg';
-=======
-import { Files, Network, LayoutDashboard, Settings, Layers, Zap } from 'lucide-react';
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
 export default function ActivityBar({ activeTab, setActiveTab, onOpenSettings }) {
   const navItems = [
@@ -18,13 +14,8 @@ export default function ActivityBar({ activeTab, setActiveTab, onOpenSettings })
     <div className="w-12 bg-gh-canvas border-r border-gh-border flex flex-col justify-between items-center py-2 select-none z-20 shrink-0">
       <div className="flex flex-col items-center gap-1 w-full">
         {/* Logo */}
-<<<<<<< HEAD
         <div className="w-8 h-8 rounded-lg overflow-hidden mb-3 mx-auto flex items-center justify-center">
           <img src={logoImg} alt="ErrorX404" className="w-full h-full object-cover rounded-lg" />
-=======
-        <div className="w-8 h-8 rounded-lg bg-gh-accentEmphasis flex items-center justify-center mb-3 mx-auto">
-          <Zap size={16} className="text-white" strokeWidth={2.5} />
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
         </div>
 
         {navItems.map((item) => {

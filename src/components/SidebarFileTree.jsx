@@ -51,7 +51,6 @@ function buildTree(files) {
   return root;
 }
 
-<<<<<<< HEAD
 /**
  * Build a nested folder tree from routines loaded from the backend.
  * Uses routine.relative_path (persisted in SQLite) to reconstruct hierarchy.
@@ -99,11 +98,6 @@ function buildTreeFromRoutines(routines, pipelineCache = {}) {
 // ─── FileTreeNode (recursive) ───────────────────────────────────────────────
 
 function FileTreeNode({ node, routines, activeRoutine, onSelectRoutine, depth = 0, pipelineCache = {} }) {
-=======
-// ─── FileTreeNode (recursive) ───────────────────────────────────────────────
-
-function FileTreeNode({ node, routines, activeRoutine, onSelectRoutine, depth = 0 }) {
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
   const [open, setOpen] = useState(true);
   const childNames = Object.keys(node.children);
   const hasContent = childNames.length > 0 || node.files.length > 0;
@@ -140,25 +134,15 @@ function FileTreeNode({ node, routines, activeRoutine, onSelectRoutine, depth = 
               activeRoutine={activeRoutine}
               onSelectRoutine={onSelectRoutine}
               depth={node.name ? depth + 1 : depth}
-<<<<<<< HEAD
               pipelineCache={pipelineCache}
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
             />
           ))}
 
           {/* Files */}
-<<<<<<< HEAD
           {node.files.map(({ routineRef, label, rel, isTarget }) => {
             // Use routineRef directly if available (from buildTreeFromRoutines),
             // otherwise fall back to name matching (from buildTree / upload preview)
             const routine = routineRef || routines.find(r => r.name === getRoutineName(label));
-=======
-          {node.files.map(({ file, label, rel }) => {
-            // Try to match against a loaded routine by name
-            const rname = getRoutineName(label);
-            const routine = routines.find(r => r.name === rname);
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
             const isSelected = activeRoutine && routine && activeRoutine.id === routine.id;
 
             return (
@@ -174,15 +158,9 @@ function FileTreeNode({ node, routines, activeRoutine, onSelectRoutine, depth = 
                     : 'text-gh-textSubtle cursor-default opacity-60'
                 }`}
               >
-<<<<<<< HEAD
                 <FileCode size={13} className={isTarget ? 'text-gh-green shrink-0' : isSelected ? 'text-gh-orange shrink-0' : 'text-gh-textSubtle shrink-0'} />
                 <span className="truncate flex-1 text-left font-mono">{label}</span>
                 {routine && !isTarget && (
-=======
-                <FileCode size={13} className={isSelected ? 'text-gh-orange shrink-0' : 'text-gh-textSubtle shrink-0'} />
-                <span className="truncate flex-1 text-left font-mono">{label}</span>
-                {routine && (
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
                   <span
                     className={`w-1.5 h-1.5 rounded-full shrink-0 mr-2 ${
                       routine.status === 'needs_review' ? 'bg-gh-yellow' :
@@ -249,7 +227,6 @@ function FlatRoutineList({ routines, activeRoutine, onSelectRoutine, onUpload })
 
 export default function SidebarFileTree({
   routines,
-<<<<<<< HEAD
   allRoutines,
   activeRoutine,
   onSelectRoutine,
@@ -258,13 +235,6 @@ export default function SidebarFileTree({
   onRunPipeline,
   isProcessing,
   isUploading: isUploadingProp,
-=======
-  activeRoutine,
-  onSelectRoutine,
-  onUploadRoutine,
-  onRunPipeline,
-  isProcessing,
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
   targetLang,
   setTargetLang,
   pipelineProgress,
@@ -273,31 +243,22 @@ export default function SidebarFileTree({
   uploadedFiles,          // [{ file, rel }] — the last batch uploaded (preserving folder structure)
   onSetUploadedFiles,     // setter so App can read the tree
   uploadRef,              // ref handle so MenuBar can open the upload modal
-<<<<<<< HEAD
   pipelineCache = {},
   // Workspace props
   workspaces = [],
   activeWorkspaceId = null,
   onSelectWorkspace,
-=======
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 }) {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadTab, setUploadTab] = useState('file');
   const [uploadName, setUploadName] = useState('');
   const [uploadCode, setUploadCode] = useState('');
   const [selectedFiles, setSelectedFiles] = useState([]);
-<<<<<<< HEAD
   const [isUploadingLocal, setIsUploadingLocal] = useState(false);
   const isUploading = isUploadingLocal || Boolean(isUploadingProp);
   const [uploadStatus, setUploadStatus] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [filterText, setFilterText] = useState('');
-=======
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
   const fileInputRef = useRef(null);
   const folderInputRef = useRef(null);
@@ -379,25 +340,16 @@ export default function SidebarFileTree({
   // ── Upload ─────────────────────────────────────────────────────────────────
 
   const handleFileUpload = async () => {
-<<<<<<< HEAD
     if (selectedFiles.length === 0 || isUploading) return;
     setIsUploadingLocal(true);
     setUploadStatus(null);
 
-=======
-    if (selectedFiles.length === 0) return;
-    setIsUploading(true);
-    setUploadStatus(null);
-    let uploadedCount = 0;
-    // Propagate the file list (with relative paths) to App so the tree can be built
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
     if (onSetUploadedFiles) {
       onSetUploadedFiles(selectedFiles.map(f => ({
         file: f,
         rel: f.webkitRelativePath || f.name,
       })));
     }
-<<<<<<< HEAD
 
     try {
       if (selectedFiles.length > 1 && onUploadFiles) {
@@ -455,31 +407,6 @@ export default function SidebarFileTree({
     } finally {
       setIsUploadingLocal(false);
     }
-=======
-    try {
-      for (const file of selectedFiles) {
-        const content = await readFileContent(file);
-        const name = getRoutineName(file.name);
-        const lang = detectLanguage(file.name);
-        await onUploadRoutine(name, content, lang);
-        uploadedCount++;
-      }
-      setUploadStatus({ type: 'success', message: `✓ ${uploadedCount} routine(s) uploaded successfully` });
-      setTimeout(() => { setShowUploadModal(false); resetModal(); }, 1200);
-    } catch (err) {
-      setUploadStatus({ type: 'error', message: `Upload failed after ${uploadedCount} file(s): ${err.message}` });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handlePasteSubmit = (e) => {
-    e.preventDefault();
-    if (!uploadName.trim() || !uploadCode.trim()) return;
-    onUploadRoutine(uploadName.trim(), uploadCode.trim());
-    setShowUploadModal(false);
-    resetModal();
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
   };
 
   const resetModal = () => {
@@ -493,7 +420,6 @@ export default function SidebarFileTree({
 
   // ── Tree vs flat list ──────────────────────────────────────────────────────
 
-<<<<<<< HEAD
   // Filter routines based on search text
   const filteredRoutines = routines.filter(r =>
     r.name.toLowerCase().includes(filterText.toLowerCase()) ||
@@ -505,16 +431,6 @@ export default function SidebarFileTree({
   const hasAnyFolderPath = filteredRoutines.some(r => r.relative_path && r.relative_path.includes('/'));
   const treeData = hasAnyFolderPath ? buildTreeFromRoutines(filteredRoutines, pipelineCache) : null;
   const hasFolderStructure = treeData && Object.keys(treeData.children).length > 0;
-=======
-  // Build tree from the uploaded batch (if available)
-  const treeData = uploadedFiles && uploadedFiles.length > 0
-    ? buildTree(uploadedFiles.map(({ file }) => file))
-    : null;
-
-  const hasFolderStructure = treeData && (
-    Object.keys(treeData.children).length > 0
-  );
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
 
   const tabs = [
     { id: 'file', label: 'Files', icon: FileUp },
@@ -544,7 +460,6 @@ export default function SidebarFileTree({
         </div>
       )}
 
-<<<<<<< HEAD
       {/* Explorer Header & Quick Action Buttons */}
       <div className="px-3 py-2 border-b border-gh-border flex items-center justify-between bg-gh-surface2">
         <span className="text-[10px] font-semibold text-gh-textSubtle tracking-widest uppercase">Explorer</span>
@@ -610,75 +525,6 @@ export default function SidebarFileTree({
           placeholder="Search files..."
           className="w-full bg-gh-surface border border-gh-border rounded px-2.5 py-1 text-xs text-gh-text focus:outline-none focus:border-gh-accent placeholder:text-gh-textSubtle font-sans transition-all"
         />
-=======
-      {/* Header */}
-      <div className="px-3 py-2.5 border-b border-gh-border flex justify-between items-center">
-        <span className="text-[10px] font-semibold text-gh-textSubtle tracking-widest uppercase">Explorer</span>
-        <button
-          onClick={() => setShowUploadModal(true)}
-          title="Upload Routine"
-          className="w-6 h-6 rounded-md hover:bg-gh-surface flex items-center justify-center text-gh-textMuted hover:text-gh-text transition-colors"
-        >
-          <Plus size={14} />
-        </button>
-      </div>
-
-      {/* Target Language + Pipeline Controls */}
-      <div className="p-3 border-b border-gh-border space-y-2.5">
-        <div>
-          <label className="block text-[10px] font-semibold text-gh-textSubtle uppercase tracking-wider mb-1.5">
-            Target Language
-          </label>
-          <select
-            value={targetLang}
-            onChange={(e) => setTargetLang(e.target.value)}
-            className="w-full bg-gh-bg border border-gh-border rounded-lg px-2.5 py-1.5 text-xs text-gh-text focus:outline-none focus:border-gh-accent transition-colors"
-          >
-            <option value="Python">Python 3.11+</option>
-            <option value="R">R Language</option>
-          </select>
-        </div>
-
-        {/* Pipeline button */}
-        <button
-          onClick={onRunPipeline}
-          disabled={!canRun}
-          className={`w-full py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
-            canRun
-              ? 'bg-gh-accent hover:bg-gh-accentHover text-white shadow-sm'
-              : isProcessing
-              ? 'bg-gh-accentEmphasis text-white cursor-not-allowed'
-              : 'bg-gh-surface text-gh-textSubtle cursor-not-allowed border border-gh-border'
-          }`}
-        >
-          {isProcessing ? (
-            <>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin shrink-0">
-                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-              </svg>
-              <span className="truncate">{pipelineStep || 'Processing…'}</span>
-            </>
-          ) : (
-            <>
-              <Play size={12} strokeWidth={2.5} />
-              Run Pipeline
-            </>
-          )}
-        </button>
-
-        {/* Progress bar */}
-        {isProcessing && pipelineProgress > 0 && (
-          <div className="space-y-1">
-            <div className="w-full h-1.5 bg-gh-surface rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gh-accent rounded-full transition-all duration-500"
-                style={{ width: `${pipelineProgress}%` }}
-              />
-            </div>
-            <p className="text-[10px] text-gh-textSubtle text-right">{pipelineProgress}%</p>
-          </div>
-        )}
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
       </div>
 
       {/* File Tree / Routine List */}
@@ -686,11 +532,7 @@ export default function SidebarFileTree({
         <div className="px-3 py-2 flex items-center gap-1">
           <ChevronDown size={12} className="text-gh-textSubtle" />
           <span className="text-[10px] font-semibold text-gh-textSubtle uppercase tracking-wider">
-<<<<<<< HEAD
             Routines ({filteredRoutines.length})
-=======
-            Routines ({routines.length})
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
           </span>
         </div>
 
@@ -698,27 +540,16 @@ export default function SidebarFileTree({
           // Folder-aware tree view
           <FileTreeNode
             node={treeData}
-<<<<<<< HEAD
             routines={filteredRoutines}
             activeRoutine={activeRoutine}
             onSelectRoutine={onSelectRoutine}
             depth={0}
             pipelineCache={pipelineCache}
-=======
-            routines={routines}
-            activeRoutine={activeRoutine}
-            onSelectRoutine={onSelectRoutine}
-            depth={0}
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
           />
         ) : (
           // Flat list (default / single files)
           <FlatRoutineList
-<<<<<<< HEAD
             routines={filteredRoutines}
-=======
-            routines={routines}
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
             activeRoutine={activeRoutine}
             onSelectRoutine={onSelectRoutine}
             onUpload={() => setShowUploadModal(true)}
@@ -918,7 +749,6 @@ export default function SidebarFileTree({
                     <button type="button" onClick={closeModal} className="px-3 py-1.5 bg-gh-surface hover:bg-gh-surface2 border border-gh-border text-gh-text rounded-lg text-xs transition-colors">Cancel</button>
                     <button
                       type="submit"
-<<<<<<< HEAD
                       disabled={!uploadName.trim() || !uploadCode.trim() || isUploading}
                       className="px-4 py-1.5 bg-gh-accent hover:bg-gh-accentHover text-white font-semibold rounded-lg text-xs flex items-center gap-1.5 disabled:opacity-40 transition-colors"
                     >
@@ -926,12 +756,6 @@ export default function SidebarFileTree({
                         ? <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Uploading…</>
                         : <><Upload size={11} /> Save & Process</>
                       }
-=======
-                      disabled={!uploadName.trim() || !uploadCode.trim()}
-                      className="px-4 py-1.5 bg-gh-accent hover:bg-gh-accentHover text-white font-semibold rounded-lg text-xs flex items-center gap-1.5 disabled:opacity-40 transition-colors"
-                    >
-                      <Upload size={11} /> Save & Process
->>>>>>> 0547345875cd943935a856f3d336a0ebc97837ab
                     </button>
                   </div>
                 </form>
