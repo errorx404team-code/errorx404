@@ -1,7 +1,9 @@
 import React from 'react';
-import { CheckCircle2, AlertTriangle, XCircle, ShieldCheck, Network, Layers, FileText, Cpu, Activity, Terminal, GitBranch, ListOrdered, PackageCheck, AlertCircle, BookOpen } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, XCircle, ShieldCheck, Network, Layers, FileText, Cpu, Activity, Terminal, GitBranch, ListOrdered, PackageCheck, AlertCircle, BookOpen, UserCheck } from 'lucide-react';
 import HumanUnderstandingPanel from './HumanUnderstandingPanel';
+import HumanReviewPanel from './HumanReviewPanel';
 import DependencyGraphPanel from './DependencyGraphPanel';
+import ProjectVerifyPanel from './ProjectVerifyPanel';
 
 export default function BottomPanel({
   activeBottomTab,
@@ -20,9 +22,15 @@ export default function BottomPanel({
   conversionPlan = null,
   projectVerification = null,
   workspaceCycles = [],
-  // Feature 1: Human Understanding
+  // Feature 1: Human Understanding / Review
   conversion = null,
   activeRoutine = null,
+  reviewDecision = null,
+  onReview = null,
+  onRollback = null,
+  onApprove = null,
+  onReject = null,
+  showToast = null,
   // Feature 2: Dependency Graph gate props
   analysisComplete = false,
   isAnalyzing = false,
@@ -281,9 +289,22 @@ export default function BottomPanel({
           />
         )}
 
-        {/* ── Human Understanding Panel ────────────────────────────────────── */}
+        {/* ── Human Understanding & Review Panel ───────────────────────── */}
         {activeBottomTab === 'human-understanding' && (
-          <HumanUnderstandingPanel conversion={conversion} activeRoutine={activeRoutine} />
+          <HumanReviewPanel
+            activeRoutine={activeRoutine}
+            conversion={conversion}
+            verificationData={verificationData}
+            confidenceData={confidenceData}
+            documentationData={documentationData}
+            explainabilityData={explainabilityData}
+            reviewDecision={reviewDecision}
+            onReview={onReview}
+            onRollback={onRollback}
+            onApprove={onApprove}
+            onReject={onReject}
+            showToast={showToast}
+          />
         )}
 
         {/* ── Business Logic Partitioning ───────────────────────────────────── */}
@@ -404,81 +425,11 @@ export default function BottomPanel({
 
         {/* ── NEW: Project-Level Verification ─────────────────────────────── */}
         {activeBottomTab === 'project-verify' && (
-          !projectVerification ? (
-            <Empty message="Run 'Verify Project' to check all converted files together" />
-          ) : (
-            <div className="flex flex-col gap-3 animate-fadeIn">
-              {/* Overall status */}
-              <div className={`p-3 rounded-xl border flex items-center justify-between ${
-                projectVerification.overall_status === 'PASSED' ? 'bg-gh-greenBg border-gh-greenDim/40' :
-                projectVerification.overall_status === 'FAILED' ? 'bg-gh-redBg border-gh-red/20' :
-                'bg-gh-yellowBg border-gh-yellow/30'
-              }`}>
-                <div>
-                  <p className="font-semibold text-gh-text text-sm">Project Verification: {' '}
-                    <span className={projectVerification.overall_status === 'PASSED' ? 'text-gh-green' : projectVerification.overall_status === 'FAILED' ? 'text-gh-red' : 'text-gh-yellow'}>
-                      {projectVerification.overall_status}
-                    </span>
-                  </p>
-                  {projectVerification.confidence_score != null && (
-                    <p className="text-[11px] text-gh-textMuted mt-0.5">
-                      Confidence: <strong className="text-gh-accent">{projectVerification.confidence_score}%</strong>
-                      {' '}({projectVerification.confidence_category?.replace('_', ' ').toUpperCase()})
-                    </p>
-                  )}
-                </div>
-                <div className="text-[10px] font-mono text-gh-textMuted text-right space-y-0.5">
-                  <p>Files: <strong className="text-gh-text">{projectVerification.files_verified}/{projectVerification.total_files}</strong></p>
-                  <p>Syntax: <strong className="text-gh-green">{projectVerification.syntax_passed}</strong></p>
-                  <p>Imports: <strong className="text-gh-green">{projectVerification.import_passed}</strong></p>
-                  <p>Integration: <strong className="text-gh-accent">{projectVerification.integration_tests_passed}/{projectVerification.integration_tests_total}</strong></p>
-                  <p>Dep Issues: <strong className={projectVerification.dependency_issues > 0 ? 'text-gh-red' : 'text-gh-green'}>{projectVerification.dependency_issues}</strong></p>
-                </div>
-              </div>
-
-              {/* Broken imports */}
-              {projectVerification.broken_imports?.length > 0 && (
-                <div className="p-2.5 bg-gh-redBg border border-gh-red/20 rounded-xl">
-                  <p className="text-[11px] font-semibold text-gh-red mb-1">Broken Imports ({projectVerification.broken_imports.length})</p>
-                  {projectVerification.broken_imports.slice(0, 5).map((bi, i) => (
-                    <p key={i} className="font-mono text-[10px] text-gh-textMuted">{bi.file}: {bi.issue}</p>
-                  ))}
-                </div>
-              )}
-
-              {/* Blocked files */}
-              {Object.keys(projectVerification.blocked_files || {}).length > 0 && (
-                <div className="p-2.5 bg-gh-yellowBg border border-gh-yellow/30 rounded-xl">
-                  <p className="text-[11px] font-semibold text-gh-yellow mb-1">Blocked Files</p>
-                  {Object.entries(projectVerification.blocked_files).map(([f, reason], i) => (
-                    <p key={i} className="font-mono text-[10px] text-gh-textMuted">{f}: {reason}</p>
-                  ))}
-                </div>
-              )}
-
-              {/* Missing deps */}
-              {projectVerification.missing_deps?.length > 0 && (
-                <div className="p-2.5 bg-gh-surface border border-gh-border rounded-xl">
-                  <p className="text-[11px] font-semibold text-gh-textMuted mb-1">Missing Dependencies ({projectVerification.missing_deps.length})</p>
-                  {projectVerification.missing_deps.slice(0, 5).map((m, i) => (
-                    <p key={i} className="font-mono text-[10px] text-gh-textMuted">{m.source} → {m.target}: {m.issue}</p>
-                  ))}
-                </div>
-              )}
-
-              {/* Full report text */}
-              {projectVerification.report_text && (
-                <div className="font-mono text-[10px] text-gh-textSubtle whitespace-pre-wrap p-2 bg-gh-bg border border-gh-border rounded-xl leading-relaxed">
-                  {projectVerification.report_text}
-                </div>
-              )}
-
-              {/* AI Disclaimer — subtle, small */}
-              <div className="px-2 py-1.5 bg-gh-surface/50 border border-gh-border/60 rounded-lg text-[10px] text-gh-textSubtle italic">
-                ⚠ AI-generated code can contain mistakes. Please verify the converted project and review the results before accepting.
-              </div>
-            </div>
-          )
+          <ProjectVerifyPanel
+            workspaceId={activeRoutine?.workspace_id || '__default__'}
+            routines={routines}
+            showToast={showToast}
+          />
         )}
 
         {/* ── Pipeline Output ───────────────────────────────────────────────── */}

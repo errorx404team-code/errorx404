@@ -18,13 +18,14 @@ from app.pipeline.analyzer import SpecAnalyzer
 from app.pipeline.dependency_builder import DependencyBuilder
 from app.pipeline.business_partitioner import BusinessPartitioner
 from app.pipeline.converter import CodeConverter, CONVERSION_SOURCE_REAL, CONVERSION_SOURCE_DEMO, CONVERSION_SOURCE_FAILED
-from app.pipeline.verifier import verifier
+from app.pipeline.verifier import verifier, _mumps_horolog, is_dynamic_horolog_expected
 from app.pipeline.scorer import scorer
 from app.pipeline.doc_generator import doc_generator
 from app.pipeline.explainability import explainability_engine
 from app.pipeline.project_analyzer import project_analyzer
 from app.pipeline.dependency_resolver import dependency_resolver
 from app.pipeline.integration_verifier import integration_verifier
+from app.pipeline.project_verifier import project_verifier
 from app.pipeline.file_classifier import classify_file
 from app.pipeline.human_explainer import human_explainer
 from app.llm_provider import llm_provider, GeminiAPIError
@@ -383,6 +384,9 @@ We have a legacy MUMPS routine with the following code:
 We need to generate 3 test cases for testing its modernized Python version.
 Each test case must specify the function/method name to call, the input arguments, and the expected output.
 
+IMPORTANT RULE FOR DYNAMIC DATE/TIME FUNCTIONS:
+- If a function returns current date/time or $HOROLOG / $H / TODAY, set "expected_output" to "$HOROLOG" or dynamic MUMPS horolog value. Do not invent static historical timestamps.
+
 Return a JSON array of exactly 3 test cases. Each test case must be a JSON object with the following structure:
 - "input_json": A JSON string containing:
     - "function_name": The string name of the function or class method to test.
@@ -402,7 +406,7 @@ Example:
 """
                 llm_res = llm_provider.generate_completion(
                     prompt,
-                    system_instruction="You are a QA automation engineer. Generate realistic test cases based on the actual MUMPS source code provided. Do not invent function names not in the code.",
+                    system_instruction="You are a QA automation engineer. Generate realistic test cases based on the actual MUMPS source code provided. Do not invent function names not in the code. For dynamic date/time or $HOROLOG routines, use '$HOROLOG' as expected output.",
                     json_mode=True
                 )
                 cases_data = json.loads(llm_res)
@@ -411,10 +415,13 @@ Example:
                         ij = item.get("input_json")
                         if not isinstance(ij, str):
                             ij = json.dumps(ij)
+                        exp_out = str(item.get("expected_output", ""))
+                        if is_dynamic_horolog_expected(exp_out):
+                            exp_out = _mumps_horolog()
                         tc = models.TestCase(
                             routine_id=routine.id,
                             input_json=ij,
-                            expected_output=str(item.get("expected_output", "")),
+                            expected_output=exp_out,
                             source=item.get("source", "live_interpreter"),
                             test_type="unit",
                         )
@@ -429,30 +436,60 @@ Example:
         test_cases = db.query(models.TestCase).filter(models.TestCase.routine_id == conversion.routine_id).all()
 
     if not test_cases:
-        t1 = models.TestCase(
-            routine_id=conversion.routine_id,
-            input_json=json.dumps({"function_name": "verify_patient", "args": ["10001"], "kwargs": {}, "dfn": "10001", "dpt": {"10001": {"status": "ACTIVE"}}}),
-            expected_output="VERIFIED",
-            source="live_interpreter",
-            test_type="unit",
-        )
-        t2 = models.TestCase(
-            routine_id=conversion.routine_id,
-            input_json=json.dumps({"function_name": "verify_patient", "args": ["20002"], "kwargs": {}, "dfn": "20002", "dpt": {"10001": {"status": "ACTIVE"}}}),
-            expected_output="FAILED",
-            source="live_interpreter",
-            test_type="unit",
-        )
-        t3 = models.TestCase(
-            routine_id=conversion.routine_id,
-            input_json=json.dumps({"function_name": "calculate_dosage", "args": [75.0, 10.0], "kwargs": {}, "weight_kg": 75.0, "base_mg": 10.0}),
-            expected_output="750.0",
-            source="reference_verified",
-            test_type="unit",
-        )
-        db.add_all([t1, t2, t3])
-        db.commit()
-        test_cases = [t1, t2, t3]
+        import re
+        raw_code = routine.raw_code if routine else ""
+        has_horolog = bool(re.search(r"\$(H|HOROLOG)\b", raw_code, re.IGNORECASE) or "TODAY" in raw_code.upper() or "HOROLOG" in raw_code.upper())
+        if has_horolog:
+            # Dynamic date/time / HOROLOG test cases
+            t1 = models.TestCase(
+                routine_id=conversion.routine_id,
+                input_json=json.dumps({"function_name": "today", "args": [], "kwargs": {}}),
+                expected_output=_mumps_horolog(),
+                source="live_interpreter",
+                test_type="unit",
+            )
+            t2 = models.TestCase(
+                routine_id=conversion.routine_id,
+                input_json=json.dumps({"function_name": "verify_patient", "args": ["10001"], "kwargs": {}, "dfn": "10001", "dpt": {"10001": {"status": "ACTIVE"}}}),
+                expected_output="VERIFIED",
+                source="live_interpreter",
+                test_type="unit",
+            )
+            t3 = models.TestCase(
+                routine_id=conversion.routine_id,
+                input_json=json.dumps({"function_name": "calculate_dosage", "args": [75.0, 10.0], "kwargs": {}, "weight_kg": 75.0, "base_mg": 10.0}),
+                expected_output="750.0",
+                source="reference_verified",
+                test_type="unit",
+            )
+            db.add_all([t1, t2, t3])
+            db.commit()
+            test_cases = [t1, t2, t3]
+        else:
+            t1 = models.TestCase(
+                routine_id=conversion.routine_id,
+                input_json=json.dumps({"function_name": "verify_patient", "args": ["10001"], "kwargs": {}, "dfn": "10001", "dpt": {"10001": {"status": "ACTIVE"}}}),
+                expected_output="VERIFIED",
+                source="live_interpreter",
+                test_type="unit",
+            )
+            t2 = models.TestCase(
+                routine_id=conversion.routine_id,
+                input_json=json.dumps({"function_name": "verify_patient", "args": ["20002"], "kwargs": {}, "dfn": "20002", "dpt": {"10001": {"status": "ACTIVE"}}}),
+                expected_output="FAILED",
+                source="live_interpreter",
+                test_type="unit",
+            )
+            t3 = models.TestCase(
+                routine_id=conversion.routine_id,
+                input_json=json.dumps({"function_name": "calculate_dosage", "args": [75.0, 10.0], "kwargs": {}, "weight_kg": 75.0, "base_mg": 10.0}),
+                expected_output="750.0",
+                source="reference_verified",
+                test_type="unit",
+            )
+            db.add_all([t1, t2, t3])
+            db.commit()
+            test_cases = [t1, t2, t3]
 
     tc_dicts = [
         {
@@ -551,11 +588,19 @@ def submit_review_decision(conversion_id: int, req: schemas.ReviewRequest, db: S
     if not conversion:
         raise HTTPException(status_code=404, detail="Conversion not found")
 
+    valid_decisions = ["approved", "rejected", "changes_requested", "reverted"]
+    if req.decision.lower() not in valid_decisions:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid decision: {req.decision}. Must be one of: {valid_decisions}"
+        )
+
     db.query(models.ReviewDecision).filter(models.ReviewDecision.conversion_id == conversion_id).delete()
     decision = models.ReviewDecision(
         conversion_id=conversion_id,
-        decision=req.decision,
-        reviewer_notes=req.reviewer_notes
+        decision=req.decision.lower(),
+        reviewer_notes=req.reviewer_notes,
+        decided_at=datetime.utcnow()
     )
     db.add(decision)
     db.commit()
@@ -563,11 +608,19 @@ def submit_review_decision(conversion_id: int, req: schemas.ReviewRequest, db: S
     return decision
 
 
+@app.get("/api/conversions/{conversion_id}/review", response_model=Optional[schemas.ReviewDecisionResponse])
+def get_review_decision(conversion_id: int, db: Session = Depends(get_db)):
+    """Get the active review decision for a conversion."""
+    decision = db.query(models.ReviewDecision).filter(models.ReviewDecision.conversion_id == conversion_id).order_by(models.ReviewDecision.id.desc()).first()
+    return decision
+
+
 @app.post("/api/conversions/{conversion_id}/rollback", response_model=schemas.ReviewDecisionResponse)
-def rollback_conversion(conversion_id: int, db: Session = Depends(get_db)):
+def rollback_conversion(conversion_id: int, req: Optional[schemas.ReviewRequest] = None, db: Session = Depends(get_db)):
     """Module 8: Rollback / Safety Mode."""
-    req = schemas.ReviewRequest(decision="reverted", reviewer_notes="Conversion rolled back to original legacy routine.")
-    return submit_review_decision(conversion_id, req, db)
+    notes = req.reviewer_notes if req and req.reviewer_notes else "Conversion rolled back to original legacy routine."
+    review_req = schemas.ReviewRequest(decision="reverted", reviewer_notes=notes)
+    return submit_review_decision(conversion_id, review_req, db)
 
 
 @app.post("/api/conversions/{conversion_id}/run")
@@ -674,7 +727,7 @@ def get_explainability_trace(conversion_id: int, db: Session = Depends(get_db)):
 
 @app.get("/api/dashboard/summary", response_model=schemas.DashboardSummaryResponse)
 def get_dashboard_summary(db: Session = Depends(get_db)):
-    """Module 7: Migration Report/Dashboard stats."""
+    """Module 7: Migration Report/Dashboard stats with Human Review KPIs."""
     total_routines = db.query(models.Routine).count()
     total_conversions = db.query(models.Conversion).count()
 
@@ -682,13 +735,35 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
     avg_score = round(sum(s.score for s in scores) / max(len(scores), 1), 1) if scores else 92.5
 
     status_breakdown = {
-        "safe": db.query(models.ConfidenceScore).filter(models.ConfidenceScore.category == "safe").count(),
-        "needs_review": db.query(models.ConfidenceScore).filter(models.ConfidenceScore.category == "needs_review").count(),
-        "failed": db.query(models.ConfidenceScore).filter(models.ConfidenceScore.category == "failed").count()
+        "safe": db.query(models.ConfidenceScore).filter(models.ConfidenceScore.category.in_(["safe", "Very High Confidence", "High Confidence"])).count(),
+        "needs_review": db.query(models.ConfidenceScore).filter(models.ConfidenceScore.category.in_(["needs_review", "Moderate Confidence", "Low Confidence"])).count(),
+        "failed": db.query(models.ConfidenceScore).filter(models.ConfidenceScore.category.in_(["failed", "Very Low Confidence"])).count()
     }
 
     partitions = db.query(models.BusinessLogicPartition).all()
     avg_cohesion = round(sum(p.cohesion_percentage for p in partitions) / max(len(partitions), 1), 1) if partitions else 88.5
+
+    # Human Review KPIs
+    reviews = db.query(models.ReviewDecision).all()
+    total_reviews = len(reviews)
+    approved_reviews = sum(1 for r in reviews if r.decision == "approved")
+    rejected_reviews = sum(1 for r in reviews if r.decision == "rejected")
+    changes_requested = sum(1 for r in reviews if r.decision == "changes_requested")
+    
+    # Conversions that have been reviewed
+    decided_conv_ids = {r.conversion_id for r in reviews if r.decision in ("approved", "rejected")}
+    pending_reviews = max(0, total_conversions - len(decided_conv_ids))
+
+    total_decided = approved_reviews + rejected_reviews
+    approval_rate = round((approved_reviews / total_decided * 100.0), 1) if total_decided > 0 else (100.0 if approved_reviews > 0 else 0.0)
+
+    # Project Verification KPIs
+    proj_vers = db.query(models.ProjectVerification).all()
+    verified_projects = sum(1 for pv in proj_vers if pv.project_status == "VERIFIED")
+    failed_projects = sum(1 for pv in proj_vers if pv.project_status == "FAILED")
+    projects_pending = sum(1 for pv in proj_vers if pv.project_status in ("NEEDS_REVIEW", "NOT_VERIFIED"))
+    if not proj_vers and total_routines > 0:
+        projects_pending = 1
 
     return {
         "total_routines": total_routines,
@@ -696,7 +771,16 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         "avg_confidence_score": avg_score,
         "status_breakdown": status_breakdown,
         "avg_partition_cohesion": avg_cohesion,
-        "business_logic_coverage_pct": 100.0
+        "business_logic_coverage_pct": 100.0,
+        "total_reviews": total_reviews,
+        "approved_reviews": approved_reviews,
+        "rejected_reviews": rejected_reviews,
+        "changes_requested_reviews": changes_requested,
+        "pending_reviews": pending_reviews,
+        "approval_rate": approval_rate,
+        "verified_projects": verified_projects,
+        "failed_projects": failed_projects,
+        "projects_pending_review": projects_pending,
     }
 
 
@@ -1365,6 +1449,18 @@ def get_project_verification(workspace_id: str, db: Session = Depends(get_db)):
         "overall_status": pvr.overall_status,
         "report_text": pvr.report_text,
     }
+
+
+@app.post("/api/projects/{workspace_id}/verify", response_model=schemas.ProjectVerificationResponse)
+def verify_project_endpoint(workspace_id: str, db: Session = Depends(get_db)):
+    """Run comprehensive Project Verification for a workspace."""
+    return project_verifier.verify_project(workspace_id, db)
+
+
+@app.get("/api/projects/{workspace_id}/verification", response_model=schemas.ProjectVerificationResponse)
+def get_project_verification_endpoint(workspace_id: str, db: Session = Depends(get_db)):
+    """Get the latest Project Verification result for a workspace."""
+    return project_verifier.get_verification(workspace_id, db)
 
 
 @app.post("/api/projects/accept", response_model=schemas.ProjectAcceptResponse)

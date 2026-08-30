@@ -17,15 +17,15 @@ code — the programming language used in the VA VistA Electronic Health Record
 (EHR) system — into modern Python (or R) code.
 
 The platform is built as a VS Code-style dark IDE in the browser. It runs an
-AI-powered pipeline powered by Google Gemini LLM that:
-  1. Parses and understands legacy MUMPS routines
-  2. Extracts business logic and specifications
-  3. Converts the code to Python/R
-  4. Verifies the output through test execution in a sandbox
-  5. Scores confidence & detects hallucinations
-  6. Provides human review (approve/reject/rollback)
-  7. Auto-generates documentation and explainability traces
-  8. Provides an AI chatbot assistant for Q&A about converted code
+end-to-end 8-stage AI modernization pipeline powered by Google Gemini LLM:
+  1. Upload & Classification: Ingest legacy .m files into isolated workspaces
+  2. Analysis & Extraction: Parse MUMPS routines, extract specifications, dependency graphs, and business rules
+  3. Conversion: Transpile legacy routines into idiomatic, typed Python
+  4. File Verification: Sandboxed execution testing against dynamic MUMPS test cases ($HOROLOG/TODAY aware)
+  5. Confidence Scoring: Mathematical confidence calculation & hallucination detection
+  6. Project Verify: Workspace-wide verification, readiness assessment, and dependency health checks
+  7. Human-in-the-Loop Review: Audit terminal for approving, rejecting, requesting changes, or rolling back
+  8. Export ZIP: Download production-ready modern Python packages
 
 --------------------------------------------------------------------------------
 TECH STACK
@@ -39,7 +39,7 @@ FRONTEND:
   - Lucide React — icon library
 
 BACKEND:
-  - Python (Python 3.14 supported)
+  - Python (Python 3.11 / 3.14 supported)
   - FastAPI — REST API framework
   - Uvicorn — ASGI server
   - SQLAlchemy 2 — ORM
@@ -72,11 +72,13 @@ errorx404-main/
 │   ├── App.jsx                  # Root component — orchestrates all state
 │   ├── index.css                # Global CSS (GitHub dark palette variables)
 │   └── components/
-│       ├── ActivityBar.jsx      # Left icon sidebar (Explorer, Dashboard, etc.)
+│       ├── ActivityBar.jsx      # Left icon sidebar (Explorer, Graph, Project Verify, Human View, Dashboard)
 │       ├── MenuBar.jsx          # Top menu bar (File, Run, Settings)
 │       ├── SidebarFileTree.jsx  # File/routine tree explorer + upload UI
 │       ├── MonacoEditorTab.jsx  # Main editor area (tabs, diff view, pipeline)
-│       ├── BottomPanel.jsx      # Bottom panel (verification, docs, explain)
+│       ├── BottomPanel.jsx      # Bottom panel (verification, docs, explain, project verify)
+│       ├── ProjectVerifyPanel.jsx # Project Verification layer (workspace readiness, KPIs, status badge)
+│       ├── HumanReviewPanel.jsx # Human-in-the-Loop review panel (audit notes, approval, rollback)
 │       ├── RightSidebarChat.jsx # Right panel AI chatbot sidebar
 │       ├── DashboardView.jsx    # Analytics dashboard with KPI cards + charts
 │       ├── StatusBar.jsx        # Bottom status bar (model, status, language)
@@ -101,7 +103,8 @@ errorx404-main/
         │   ├── dependency_builder.py  # Module 1b: Dependency graph builder
         │   ├── business_partitioner.py # Module 1c: Business logic partitioner
         │   ├── converter.py     # Module 2: Code conversion (LLM)
-        │   ├── verifier.py      # Module 3: Independent verification layer
+        │   ├── verifier.py      # Module 3: Independent file verification layer ($HOROLOG dynamic)
+        │   ├── project_verifier.py # Module 3b: Project-level verification & readiness scoring
         │   ├── scorer.py        # Module 4: Confidence & hallucination scoring
         │   ├── doc_generator.py # Module 6: Auto documentation generator
         │   └── explainability.py # Module 10: Explainability trace generator
@@ -113,25 +116,28 @@ errorx404-main/
 DATABASE SCHEMA (SQLite — backend/modernization.db)
 --------------------------------------------------------------------------------
 Table: routines
-  - id, name, source_language, raw_code, relative_path, workspace_id, created_at
+  - id, name, source_language, raw_code, relative_path, workspace_id, file_action, created_at
 
 Table: specifications
   - id, routine_id (FK), spec_json, spec_readable_text, business_rules_json, created_at
 
 Table: conversions
-  - id, routine_id (FK), target_language, generated_code, model_used, created_at
+  - id, routine_id (FK), target_language, generated_code, model_used, traceability_header, conversion_source, created_at
 
 Table: test_cases
-  - id, routine_id (FK), input_json, expected_output, source
+  - id, routine_id (FK), input_json, expected_output, source, test_type
 
 Table: verification_results
   - id, conversion_id (FK), test_case_id (FK), actual_output, passed, mismatch_details, created_at
 
-Table: confidence_scores
-  - id, conversion_id (FK), score (0-100 float), category, reasoning_text
+Table: project_verifications
+  - id, workspace_id, project_status, total_files, successfully_converted, failed_conversions, verified_files, failed_files, average_confidence, pass_rate, dependency_health, file_summaries_json, verified_at
 
 Table: review_decisions
-  - id, conversion_id (FK), decision, reviewer_notes, decided_at
+  - id, conversion_id (FK), decision (approved|rejected|changes_requested|reverted), reviewer_notes, decided_at
+
+Table: confidence_scores
+  - id, conversion_id (FK), score, category, reasoning_text, dependency_preservation_pct, interface_compatibility_pct, created_at
 
 Table: dependency_graph
   - id, routine_id (FK), node_id, node_type, related_node_id, dependency_type
@@ -188,12 +194,11 @@ STEP 5 — CODE CONVERSION (Module 2: AI-Powered Code Transformation)
   Stored in: conversions table (model_used = "gemini-2.0-flash")
   API: POST /api/routines/{id}/convert
 
-STEP 6 — VERIFICATION (Module 3: Independent Verification Layer)
+STEP 6 — FILE VERIFICATION (Module 3: Independent Verification Layer)
   The generated code is executed in an isolated subprocess sandbox
-  (sandbox_runner.py) against auto-generated test cases.
-  Test cases are LLM-generated from the MUMPS code (3 per routine).
-  Fallback test cases target verify_patient(), calculate_dosage() functions.
-  Results: actual vs. expected output comparison with fuzzy matching.
+  (sandbox_runner.py) against dynamic test cases.
+  - Dynamically computes $HOROLOG / TODAY MUMPS timestamps at runtime.
+  - Results: strict actual vs. expected output comparison.
   Stored in: test_cases + verification_results tables
   API: POST /api/conversions/{id}/verify
 
@@ -207,27 +212,40 @@ STEP 7 — CONFIDENCE SCORING (Module 4: Confidence & Hallucination Score)
   Stored in: confidence_scores table
   API: GET /api/conversions/{id}/score
 
-STEP 8 — HUMAN REVIEW (Module 5: Human-in-the-Loop)
-  Reviewer can approve / reject / request changes / rollback a conversion.
-  Rollback resets the conversion decision to "reverted".
+STEP 8 — PROJECT VERIFY (Module 3b: Whole-Project Workspace Readiness)
+  ProjectVerifier evaluates the entire workspace once all routines are converted:
+  - Aggregates all converted files, verification outcomes, and confidence scores.
+  - Validates cross-routine dependency graphs, external calls, and global references.
+  - Computes workspace-level Pass Rate, Average Confidence, and Dependency Health.
+  Status Rules:
+    - VERIFIED: Pass Rate ≥ 90% AND Avg Confidence ≥ 85% AND Dependency Health ≥ 85%
+    - NEEDS_REVIEW: Pass Rate between 60% and 89%
+    - FAILED: Pass Rate < 60%
+  Stored in: project_verifications table
+  API: POST /api/projects/{workspace_id}/verify
+       GET  /api/projects/{workspace_id}/verification
+
+STEP 9 — HUMAN-IN-THE-LOOP REVIEW (Module 5: Human Review Terminal)
+  Reviewer can inspect diffs, test summaries, and reasoning traces:
+  - Actions: Approve, Reject, Request Changes, Rollback to original legacy routine.
+  - Reviewer notes and decision timestamps recorded for complete audit compliance.
   Stored in: review_decisions table
   API: POST /api/conversions/{id}/review
+       GET  /api/conversions/{id}/review
        POST /api/conversions/{id}/rollback
 
-STEP 9 — DOCUMENTATION (Module 6: Auto-Documentation Generator)
+STEP 10 — DOCUMENTATION (Module 6: Auto-Documentation Generator)
   LLM generates Markdown documentation for the converted routine covering:
   - Routine purpose, inputs/outputs, preserved business rules, usage examples.
   API: GET /api/conversions/{id}/docs
 
-STEP 10 — EXPLAINABILITY (Module 10: Explainability Panel)
+STEP 11 — EXPLAINABILITY (Module 10: Explainability Panel)
   LLM generates a step-by-step reasoning trace showing why each conversion
   decision was made and how business rules were preserved.
   API: GET /api/conversions/{id}/explain
 
-PROJECT-LEVEL PIPELINE:
-  Multiple routines can be processed in one batch.
-  API: POST /api/projects/run-pipeline
-  Export as ZIP preserving folder structure:
+STEP 12 — PRODUCTION EXPORT:
+  Export accepted conversions as a clean ZIP package preserving folder structure.
   API: POST /api/projects/export-zip
 
 --------------------------------------------------------------------------------

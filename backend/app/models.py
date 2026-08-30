@@ -237,3 +237,23 @@ class ProjectVerificationResult(Base):
     overall_status = Column(String(50), nullable=False, default="NOT_VERIFIED")
     report_text = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ProjectVerification(Base):
+    """Stores workspace-level project verification summary."""
+    __tablename__ = "project_verifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    workspace_id = Column(String(100), nullable=False, index=True)
+    project_status = Column(String(50), nullable=False, default="NOT_VERIFIED")  # VERIFIED, NEEDS_REVIEW, FAILED
+    total_files = Column(Integer, nullable=False, default=0)
+    successfully_converted = Column(Integer, nullable=False, default=0)
+    failed_conversions = Column(Integer, nullable=False, default=0)
+    verified_files = Column(Integer, nullable=False, default=0)
+    failed_files = Column(Integer, nullable=False, default=0)
+    average_confidence = Column(Float, nullable=False, default=0.0)
+    pass_rate = Column(Float, nullable=False, default=0.0)
+    dependency_health = Column(Float, nullable=False, default=100.0)
+    file_summaries_json = Column(Text, nullable=True)
+    verified_at = Column(DateTime, default=datetime.utcnow)
+

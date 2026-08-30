@@ -35,11 +35,18 @@ export default function DashboardView() {
     { name: 'Failed <50%', value: summary?.status_breakdown?.failed || 0, color: '#f85149' },
   ];
 
+  const reviewPieData = [
+    { name: 'Approved', value: summary?.approved_reviews || 0, color: '#3fb950' },
+    { name: 'Rejected', value: summary?.rejected_reviews || 0, color: '#f85149' },
+    { name: 'Changes Req.', value: summary?.changes_requested_reviews || 0, color: '#d29922' },
+    { name: 'Pending Review', value: summary?.pending_reviews || 0, color: '#6e7681' },
+  ];
+
   const barData = summary?.quality_metrics || [
     { name: 'Avg Quality', confidence: summary?.avg_confidence_score || 90.0, cohesion: summary?.avg_partition_cohesion || 85.0 },
   ];
 
-  const kpis = [
+  const qualityKpis = [
     {
       label: 'Total Routines',
       value: summary?.total_routines || 0,
@@ -70,6 +77,68 @@ export default function DashboardView() {
     },
   ];
 
+  const reviewKpis = [
+    {
+      label: 'Total Reviews',
+      value: summary?.total_reviews || 0,
+      icon: Activity,
+      color: 'text-gh-accent',
+      bg: 'bg-gh-surface border-gh-border',
+    },
+    {
+      label: 'Approved',
+      value: summary?.approved_reviews || 0,
+      icon: ShieldCheck,
+      color: 'text-gh-green',
+      bg: 'bg-gh-greenBg border-gh-greenDim/30',
+    },
+    {
+      label: 'Rejected',
+      value: summary?.rejected_reviews || 0,
+      icon: FileCheck,
+      color: 'text-gh-red',
+      bg: 'bg-gh-redBg border-gh-red/20',
+    },
+    {
+      label: 'Pending Review',
+      value: summary?.pending_reviews ?? (summary?.total_conversions || 0),
+      icon: Layers,
+      color: 'text-gh-yellow',
+      bg: 'bg-gh-yellowBg border-gh-yellow/30',
+    },
+    {
+      label: 'Approval Rate',
+      value: `${summary?.approval_rate ?? 100}%`,
+      icon: TrendingUp,
+      color: 'text-gh-green',
+      bg: 'bg-gh-greenBg border-gh-greenDim/30',
+    },
+  ];
+
+  const projectKpis = [
+    {
+      label: 'Verified Projects',
+      value: summary?.verified_projects || 0,
+      icon: ShieldCheck,
+      color: 'text-gh-green',
+      bg: 'bg-gh-greenBg border-gh-greenDim/30',
+    },
+    {
+      label: 'Failed Projects',
+      value: summary?.failed_projects || 0,
+      icon: FileCheck,
+      color: 'text-gh-red',
+      bg: 'bg-gh-redBg border-gh-red/20',
+    },
+    {
+      label: 'Projects Pending Review',
+      value: summary?.projects_pending_review || 0,
+      icon: Layers,
+      color: 'text-gh-yellow',
+      bg: 'bg-gh-yellowBg border-gh-yellow/30',
+    },
+  ];
+
   const tooltipStyle = {
     backgroundColor: '#161b22',
     borderColor: '#30363d',
@@ -86,10 +155,10 @@ export default function DashboardView() {
           <div>
             <h1 className="text-lg font-bold text-gh-text flex items-center gap-2">
               <LayoutDashboard size={20} className="text-gh-accent" />
-              Migration Dashboard
+              Migration &amp; Project Health Dashboard
             </h1>
             <p className="text-xs text-gh-textSubtle mt-1">
-              Real-time analytics from ErrorX404 MUMPS transformation pipeline
+              Real-time analytics, Project Verification status, and Human-in-the-Loop audit metrics from ErrorX404
             </p>
           </div>
           <button
@@ -101,20 +170,70 @@ export default function DashboardView() {
           </button>
         </div>
 
-        {/* KPI Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {kpis.map((kpi, i) => {
-            const Icon = kpi.icon;
-            return (
-              <div key={i} className={`p-4 rounded-xl border ${kpi.bg} flex items-center justify-between hover-lift`}>
-                <div>
-                  <p className="text-xs text-gh-textMuted font-medium">{kpi.label}</p>
-                  <p className={`text-2xl font-bold mt-1 ${kpi.color}`}>{kpi.value}</p>
+        {/* Project Verification KPIs (Requirement 9) */}
+        <div className="mb-6">
+          <h2 className="text-xs font-bold text-gh-textMuted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <ShieldCheck size={14} className="text-gh-accent" />
+            Project Verification Readiness
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {projectKpis.map((kpi, i) => {
+              const Icon = kpi.icon;
+              return (
+                <div key={i} className={`p-3.5 rounded-xl border ${kpi.bg} flex items-center justify-between hover-lift`}>
+                  <div>
+                    <p className="text-[11px] text-gh-textMuted font-medium">{kpi.label}</p>
+                    <p className={`text-xl font-bold mt-1 ${kpi.color}`}>{kpi.value}</p>
+                  </div>
+                  <Icon size={22} className={`${kpi.color} opacity-70`} />
                 </div>
-                <Icon size={26} className={`${kpi.color} opacity-70`} />
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Human Review KPIs (Requirement 7) */}
+        <div className="mb-6">
+          <h2 className="text-xs font-bold text-gh-textMuted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <Activity size={14} className="text-gh-green" />
+            Human-in-the-Loop Review Audit KPIs
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {reviewKpis.map((kpi, i) => {
+              const Icon = kpi.icon;
+              return (
+                <div key={i} className={`p-3.5 rounded-xl border ${kpi.bg} flex items-center justify-between hover-lift`}>
+                  <div>
+                    <p className="text-[11px] text-gh-textMuted font-medium">{kpi.label}</p>
+                    <p className={`text-xl font-bold mt-1 ${kpi.color}`}>{kpi.value}</p>
+                  </div>
+                  <Icon size={22} className={`${kpi.color} opacity-70`} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Pipeline Quality KPI Grid */}
+        <div className="mb-6">
+          <h2 className="text-xs font-bold text-gh-textMuted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <Activity size={14} className="text-gh-accent" />
+            Transformation Quality &amp; Cohesion
+          </h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {qualityKpis.map((kpi, i) => {
+              const Icon = kpi.icon;
+              return (
+                <div key={i} className={`p-4 rounded-xl border ${kpi.bg} flex items-center justify-between hover-lift`}>
+                  <div>
+                    <p className="text-xs text-gh-textMuted font-medium">{kpi.label}</p>
+                    <p className={`text-2xl font-bold mt-1 ${kpi.color}`}>{kpi.value}</p>
+                  </div>
+                  <Icon size={26} className={`${kpi.color} opacity-70`} />
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Charts */}
@@ -138,9 +257,9 @@ export default function DashboardView() {
             </div>
           </div>
 
-          {/* Pie Chart */}
+          {/* Pie Chart: Status & Review Distribution */}
           <div className="p-5 bg-gh-canvas border border-gh-border rounded-xl">
-            <h3 className="text-sm font-semibold text-gh-text mb-4">Verification Status Breakdown</h3>
+            <h3 className="text-sm font-semibold text-gh-text mb-4">Confidence Status Distribution</h3>
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -173,14 +292,14 @@ export default function DashboardView() {
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-gh-accent" />
-            <span className="text-xs text-gh-textMuted">Avg Score: <strong className="text-gh-text">{summary?.avg_confidence_score || 0}%</strong></span>
+            <span className="text-xs text-gh-textMuted">Approved Conversions: <strong className="text-gh-green">{summary?.approved_reviews || 0}</strong></span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-gh-purple" />
-            <span className="text-xs text-gh-textMuted">Business Logic Coverage: <strong className="text-gh-green">{summary?.business_logic_coverage_pct || 100}%</strong></span>
+            <span className="text-xs text-gh-textMuted">Approval Rate: <strong className="text-gh-green">{summary?.approval_rate ?? 100}%</strong></span>
           </div>
           <div className="ml-auto text-[10px] text-gh-textSubtle italic">
-            SQL Aggregated · Live Data
+            SQL Aggregated · Audit Trail Active
           </div>
         </div>
       </div>

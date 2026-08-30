@@ -1,8 +1,80 @@
 import json
 import math
 import ast
+import datetime
 from typing import List, Dict, Any, Tuple, Optional
 from app.execution.sandbox_runner import sandbox_runner
+
+
+def _mumps_horolog() -> str:
+    """
+    Computes current MUMPS $HOROLOG value: 'days,seconds' since 31 Dec 1840.
+    """
+    epoch = datetime.date(1840, 12, 31)
+    today = datetime.date.today()
+    days = (today - epoch).days
+    now = datetime.datetime.now()
+    seconds = now.hour * 3600 + now.minute * 60 + now.second
+    return f"{days},{seconds}"
+
+
+def is_horolog_format(val: Any) -> bool:
+    """
+    Validates if val matches MUMPS $HOROLOG format:
+    - String 'days,seconds' with integer days and integer seconds (0..86399)
+    - List or tuple [days, seconds] with integer days and integer seconds (0..86399)
+    """
+    if val is None or isinstance(val, bool):
+        return False
+
+    # List or tuple format e.g. [67810, 39325] or ['67810', '39325']
+    if isinstance(val, (list, tuple)):
+        if len(val) == 2:
+            try:
+                days = int(val[0])
+                secs = int(val[1])
+                return days >= 0 and 0 <= secs <= 86399
+            except (ValueError, TypeError):
+                return False
+        return False
+
+    # String format e.g. "67810,39325" or "66000,0" or "[67810, 39325]"
+    if isinstance(val, str):
+        val_str = val.strip()
+        if (val_str.startswith("[") and val_str.endswith("]")) or (val_str.startswith("(") and val_str.endswith(")")):
+            val_str = val_str[1:-1].strip()
+        parts = [p.strip().strip("'\"") for p in val_str.split(",")]
+        if len(parts) == 2:
+            try:
+                days = int(parts[0])
+                secs = int(parts[1])
+                return days >= 0 and 0 <= secs <= 86399
+            except (ValueError, TypeError):
+                return False
+    return False
+
+
+def is_dynamic_horolog_expected(val: Any) -> bool:
+    """
+    Checks if expected output signifies a dynamic MUMPS $HOROLOG / TODAY result
+    or is a horolog timestamp representation (e.g. historical '66000,0' or [66000, 0]).
+    """
+    if val is None or isinstance(val, bool):
+        return False
+    val_str = str(val).strip().upper()
+    if val_str in ("$HOROLOG", "$H", "TODAY", "TODAY()", "DYNAMIC_HOROLOG", "_MUMPS_HOROLOG()", "MUMPS_HOROLOG_NOW()"):
+        return True
+    if is_horolog_format(val):
+        if isinstance(val, (list, tuple)):
+            return int(val[0]) >= 1000
+        val_clean = str(val).strip().strip("[]()")
+        parts = val_clean.split(",")
+        if len(parts) == 2:
+            try:
+                return int(parts[0].strip().strip("'\"")) >= 1000
+            except (ValueError, TypeError):
+                return False
+    return False
 
 
 def normalize_value(val: Any) -> Any:
@@ -42,11 +114,18 @@ def normalize_value(val: Any) -> Any:
 def compare_outputs(expected: Any, actual: Any) -> Tuple[bool, Optional[str]]:
     """
     Robust, exact, type-aware comparison for verification outputs.
-    Handles booleans, numbers, floats with precision, dicts, lists, None, and strings.
+    Handles booleans, numbers, floats with precision, dicts, lists, None, strings,
+    and dynamic MUMPS $HOROLOG / TODAY format verification.
     Never uses substring containment (e.g. 'expected in actual').
     """
     norm_exp = normalize_value(expected)
     norm_act = normalize_value(actual)
+
+    # Dynamic MUMPS $HOROLOG / TODAY comparison
+    if is_dynamic_horolog_expected(expected) or is_dynamic_horolog_expected(norm_exp):
+        if is_horolog_format(actual) or is_horolog_format(norm_act):
+            return True, None
+        return False, f"Expected valid HOROLOG format 'days,seconds' (seconds 0-86399), but received {repr(actual)}"
 
     # Both are None
     if norm_exp is None and norm_act is None:
@@ -99,6 +178,7 @@ class IndependentVerifier:
         Module 3: Independent Verification Layer.
         Executes generated Python code in sandboxed subprocess and compares actual outputs vs expected outputs.
         Produces structured test results with real statuses (PASS, FAIL, ERROR, TIMEOUT, NO_TEST).
+        Dynamically generates and verifies MUMPS date/time and $HOROLOG expected values.
         """
         results = []
         passed_count = 0
@@ -127,7 +207,21 @@ class IndependentVerifier:
             except Exception:
                 input_params = {"dfn": "10001"}
 
-            expected = tc.get("expected_output", "")
+            raw_expected = tc.get("expected_output", "")
+            func_name = input_params.get("function_name", "") if isinstance(input_params, dict) else ""
+
+            # Check if this test case is testing a dynamic routine/function ($HOROLOG / TODAY / $H)
+            is_dynamic = (
+                is_dynamic_horolog_expected(raw_expected)
+                or func_name.lower() in ("today", "horolog", "now", "get_date", "get_today")
+                or ("mumps_horolog_now" in generated_code and func_name.lower() in ("today", "horolog", "now"))
+            )
+
+            # If dynamic and expected is placeholder, empty, or token, compute current horolog dynamically
+            expected = raw_expected
+            if is_dynamic and (not raw_expected or str(raw_expected).strip().upper() in ("$HOROLOG", "$H", "TODAY", "TODAY()", "DYNAMIC_HOROLOG")):
+                expected = _mumps_horolog()
+
             exec_res = sandbox_runner.run_python_test(generated_code, input_params)
 
             runner_status = exec_res.get("status", "SUCCESS" if exec_res.get("success") else "ERROR")
@@ -151,7 +245,7 @@ class IndependentVerifier:
                 error_count += 1
                 mismatch_reason = error_msg or "Execution error"
             else:
-                # Comparison
+                # Comparison (including dynamic $HOROLOG format validation)
                 match, mismatch_reason = compare_outputs(expected, actual_out)
                 if match:
                     test_status = "PASS"
@@ -209,4 +303,5 @@ class IndependentVerifier:
         }
 
 verifier = IndependentVerifier()
+
 

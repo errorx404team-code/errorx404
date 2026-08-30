@@ -221,7 +221,7 @@ Deployment & Development Tools:
 
 3.1 Architecture Overview:
 ErrorX404 implements a modern client-server architecture with an asynchronous REST API,
-an isolated execution sandbox, a multi-stage AI pipeline, and an embedded relational
+an isolated execution sandbox, a multi-stage AI pipeline, and agn embedded relational
 database.
 
 --------------------------------------------------------------------------------

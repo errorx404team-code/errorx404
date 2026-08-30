@@ -10,6 +10,8 @@ import StatusBar from './components/StatusBar';
 import Toast from './components/Toast';
 import DepReviewModal from './components/DepReviewModal';
 import StartupLandingPage from './components/StartupLandingPage';
+import HumanReviewPanel from './components/HumanReviewPanel';
+import ProjectVerifyPanel from './components/ProjectVerifyPanel';
 
 export default function App() {
   const [showLandingPage, setShowLandingPage] = useState(true);
@@ -1450,6 +1452,31 @@ export default function App() {
         <div className="flex-1 flex flex-col h-full overflow-hidden">
           {activeTab === 'dashboard' ? (
             <DashboardView />
+          ) : activeTab === 'project-verify' ? (
+            <ProjectVerifyPanel
+              workspaceId={activeWorkspaceId}
+              routines={workspaceRoutines}
+              onSelectRoutine={handleSelectRoutine}
+              onOpenHumanReview={() => setActiveTab('review')}
+              onExportZip={handleAcceptAndDownload}
+              showToast={showToast}
+            />
+          ) : activeTab === 'review' ? (
+            <HumanReviewPanel
+              activeRoutine={activeRoutine}
+              conversion={conversion}
+              verificationData={verificationData}
+              confidenceData={confidenceData}
+              documentationData={documentationData}
+              explainabilityData={explainabilityData}
+              reviewDecision={reviewDecision}
+              onReview={handleReview}
+              onRollback={handleRollback}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              showToast={showToast}
+              isProcessing={isProcessing}
+            />
           ) : (
             <>
               <MonacoEditorTab

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Files, Network, LayoutDashboard, Settings, Layers } from 'lucide-react';
+import { Files, Network, LayoutDashboard, Settings, Layers, UserCheck, PackageCheck } from 'lucide-react';
 import logoImg from '../assets/temp_image_1786523047062.jpeg';
 
 export default function ActivityBar({ activeTab, setActiveTab, onOpenSettings }) {
@@ -7,6 +7,8 @@ export default function ActivityBar({ activeTab, setActiveTab, onOpenSettings })
     { id: 'explorer', label: 'Explorer', icon: Files },
     { id: 'graph', label: 'Dependency Graph', icon: Network },
     { id: 'partition', label: 'Business Logic Map', icon: Layers },
+    { id: 'project-verify', label: 'Project Verify', icon: PackageCheck },
+    { id: 'review', label: 'Human View', icon: UserCheck },
     { id: 'dashboard', label: 'Migration Dashboard', icon: LayoutDashboard },
   ];
 

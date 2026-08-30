@@ -130,7 +130,7 @@ class ConfidenceScoreResponse(BaseModel):
         from_attributes = True
 
 class ReviewRequest(BaseModel):
-    decision: str  # approved / rejected / changes_requested
+    decision: str  # approved / rejected / changes_requested / reverted
     reviewer_notes: Optional[str] = None
 
 class ReviewDecisionResponse(BaseModel):
@@ -160,6 +160,33 @@ class DashboardSummaryResponse(BaseModel):
     status_breakdown: Dict[str, int]
     avg_partition_cohesion: float
     business_logic_coverage_pct: float
+    total_reviews: Optional[int] = 0
+    approved_reviews: Optional[int] = 0
+    rejected_reviews: Optional[int] = 0
+    changes_requested_reviews: Optional[int] = 0
+    pending_reviews: Optional[int] = 0
+    approval_rate: Optional[float] = 0.0
+    verified_projects: Optional[int] = 0
+    failed_projects: Optional[int] = 0
+    projects_pending_review: Optional[int] = 0
+
+class ProjectVerificationResponse(BaseModel):
+    id: Optional[int] = None
+    workspace_id: str
+    total_files: int
+    successfully_converted: Optional[int] = 0
+    failed_conversions: Optional[int] = 0
+    verified_files: int
+    failed_files: int
+    average_confidence: float
+    pass_rate: float
+    dependency_health: float
+    project_status: str
+    file_summaries: Optional[List[Dict[str, Any]]] = None
+    verified_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
 
 class ChatAskRequest(BaseModel):
     question: str
